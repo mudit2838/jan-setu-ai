@@ -1,0 +1,170 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5] [cursor=pointer]: Government of India
+        - generic [ref=e6]: "|"
+        - link "Ministry of Civic Affairs" [ref=e7] [cursor=pointer]:
+          - /url: /
+      - generic [ref=e8]:
+        - link "Skip to Main Content" [ref=e9] [cursor=pointer]:
+          - /url: "#main-content"
+        - generic [ref=e10]: "|"
+        - generic [ref=e11]:
+          - button "A-" [ref=e12]
+          - button "A" [ref=e13]
+          - button "A+" [ref=e14]
+        - generic [ref=e15]: "|"
+        - button "High Contrast Toggle" [ref=e16]
+        - generic [ref=e18]: "|"
+        - button "हिन्दी" [ref=e19]
+    - main [ref=e20]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - img [ref=e25]
+          - heading "Citizen Registration" [level=2] [ref=e28]
+          - paragraph [ref=e29]: Join the Bharat JanSetu Network
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic [ref=e33]:
+              - heading "Personal Details" [level=3] [ref=e34]
+              - generic [ref=e35]:
+                - generic [ref=e36]: Full Name *
+                - generic [ref=e37]:
+                  - generic:
+                    - img
+                  - textbox "John Doe" [ref=e38]: Vikas Sharma (Test)
+              - generic [ref=e39]:
+                - generic [ref=e40]: Mobile Number *
+                - generic [ref=e41]:
+                  - generic:
+                    - img
+                  - textbox "10-digit number" [active] [ref=e42]: "9547291307"
+              - generic [ref=e43]:
+                - generic [ref=e44]: Password *
+                - generic [ref=e45]:
+                  - generic:
+                    - img
+                  - textbox "••••••••" [ref=e46]
+              - generic [ref=e47]:
+                - generic [ref=e48]: Confirm Password *
+                - generic [ref=e49]:
+                  - generic:
+                    - img
+                  - textbox "••••••••" [ref=e50]
+            - generic [ref=e51]:
+              - heading "Address Details (U.P. Only)" [level=3] [ref=e52]
+              - generic [ref=e53]:
+                - generic [ref=e54]: District *
+                - combobox [ref=e55] [cursor=pointer]:
+                  - option "Select District"
+                  - option "Agra"
+                  - option "Aligarh"
+                  - option "Ambedkar Nagar"
+                  - option "Amethi"
+                  - option "Amroha"
+                  - option "Auraiya"
+                  - option "Ayodhya"
+                  - option "Azamgarh"
+                  - option "Baghpat"
+                  - option "Bahraich"
+                  - option "Ballia"
+                  - option "Balrampur"
+                  - option "Banda"
+                  - option "Barabanki"
+                  - option "Bareilly"
+                  - option "Basti"
+                  - option "Bhadohi"
+                  - option "Bijnor"
+                  - option "Budaun"
+                  - option "Bulandshahr"
+                  - option "Chandauli"
+                  - option "Chitrakoot"
+                  - option "Deoria"
+                  - option "Etah"
+                  - option "Etawah"
+                  - option "Farrukhabad"
+                  - option "Fatehpur"
+                  - option "Firozabad"
+                  - option "Gautam Buddha Nagar"
+                  - option "Ghaziabad"
+                  - option "Ghazipur"
+                  - option "Gonda"
+                  - option "Gorakhpur"
+                  - option "Hamirpur"
+                  - option "Hapur"
+                  - option "Hardoi"
+                  - option "Hathras"
+                  - option "Jalaun"
+                  - option "Jaunpur"
+                  - option "Jhansi"
+                  - option "Kannauj"
+                  - option "Kanpur Dehat"
+                  - option "Kanpur Nagar"
+                  - option "Kasganj"
+                  - option "Kaushambi"
+                  - option "Kushinagar"
+                  - option "Lakhimpur Kheri"
+                  - option "Lalitpur"
+                  - option "Lucknow" [selected]
+                  - option "Maharajganj"
+                  - option "Mahoba"
+                  - option "Mainpuri"
+                  - option "Mathura"
+                  - option "Mau"
+                  - option "Meerut"
+                  - option "Mirzapur"
+                  - option "Moradabad"
+                  - option "Muzaffarnagar"
+                  - option "Pilibhit"
+                  - option "Pratapgarh"
+                  - option "Prayagraj"
+                  - option "Raebareli"
+                  - option "Rampur"
+                  - option "Saharanpur"
+                  - option "Sambhal"
+                  - option "Sant Kabir Nagar"
+                  - option "Shahjahanpur"
+                  - option "Shamli"
+                  - option "Shravasti"
+                  - option "Siddharthnagar"
+                  - option "Sitapur"
+                  - option "Sonbhadra"
+                  - option "Sultanpur"
+                  - option "Unnao"
+                  - option "Varanasi"
+              - generic [ref=e56]:
+                - generic [ref=e57]: Block *
+                - combobox [ref=e58] [cursor=pointer]:
+                  - option "Select Block" [selected]
+                  - option "Bakshi Ka Talab"
+                  - option "Malihabad"
+                  - option "Mohanlalganj"
+              - generic [ref=e59]:
+                - generic [ref=e60]: Village/Town *
+                - combobox [disabled] [ref=e61] [cursor=pointer]:
+                  - option "Select Village" [selected]
+              - generic [ref=e62]:
+                - generic [ref=e63]:
+                  - generic [ref=e64]: House/Street/Landmark *
+                  - textbox "H.No 123, Near Temple" [ref=e65]
+                - generic [ref=e66]:
+                  - generic [ref=e67]: Pincode *
+                  - textbox "226001" [ref=e68]
+          - button "Register & Verify Mobile" [ref=e69]
+          - generic [ref=e70]:
+            - generic [ref=e75]: Or register instantly with
+            - button "Meri Pehchaan Verify via DigiLocker KYC" [ref=e76]:
+              - generic [ref=e77]: Meri Pehchaan
+              - generic [ref=e78]: Verify via DigiLocker KYC
+        - paragraph [ref=e80]:
+          - text: Already have an account?
+          - link "Login Here" [ref=e81] [cursor=pointer]:
+            - /url: /login
+  - button "Open Next.js Dev Tools" [ref=e87] [cursor=pointer]:
+    - img [ref=e88]
+  - alert [ref=e91]
+```
