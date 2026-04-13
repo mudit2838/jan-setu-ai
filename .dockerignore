@@ -1,0 +1,30 @@
+# BHARAT JANSETU DOCKER EXCLUDE RULES
+# OPTIMIZED PRODUCTION BUILD FOOTPRINT
+
+**/node_modules
+**/.next
+**/dist
+**/build
+**/.env
+**/.git
+**/.gitignore
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache
+**/venv
+**/env
+**/.vscode
+**/.idea
+**/*.log
+**/*.bak
+**/*.swp
+**/*.sh
+**/.DS_Store
+**/*.temp
+**/*.tmp
+**/.github
+**/PROJECT_PROGRESS.md
+**/README.md
+**/DEPLOYMENT_GUIDE.md

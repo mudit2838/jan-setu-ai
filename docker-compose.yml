@@ -1,0 +1,64 @@
+# BHARAT JANSETU PRODUCTION ORCHESTRATOR
+# STITCHES 75-DISTRICT BACKEND + 100% PRECISION AI UNIFIED STACK
+
+services:
+  # 1. MongoDB - High Availability Local Store
+  mongodb:
+    image: mongo:latest
+    container_name: jansetu_database
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - jansetu_net
+    restart: always
+
+  # 2. AI Service - FastAPI / spaCy NLP Unit
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: jansetu_ai
+    environment:
+      - PORT=8000
+    ports:
+      - "8000:8000"
+    networks:
+      - jansetu_net
+    depends_on:
+      - mongodb
+    # Health check for the FastAPI service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+
+  # 3. Backend Service - Node.js Node logic
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jansetu_backend
+    environment:
+      - MONGO_URI=mongodb://mongodb/jansetu_v2
+      - JWT_SECRET=${JWT_SECRET:-jan-setu-secure-2026}
+      - AI_SERVICE_URL=http://ai-service:8000
+      - NODE_ENV=production
+    ports:
+      - "5000:5000"
+    networks:
+      - jansetu_net
+    depends_on:
+      - mongodb
+      - ai-service
+    restart: always
+
+networks:
+  jansetu_net:
+    driver: bridge
+
+volumes:
+  mongodb_data:

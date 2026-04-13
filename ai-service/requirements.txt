@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+spacy
+python-dotenv
+python-multipart
+# Run this after installing requirements:
+# python -m spacy download en_core_web_md
