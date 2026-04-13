@@ -5,8 +5,14 @@ import axios from 'axios';
 import { Trophy, TrendingUp, TrendingDown, Target, Loader2, Award, Zap, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+interface DepartmentStat {
+    department: string;
+    total: number;
+    resolutionRate: number;
+}
+
 export default function Leaderboard() {
-    const [stats, setStats] = useState<any[]>([]);
+    const [stats, setStats] = useState<DepartmentStat[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchLeaderboard = async () => {
@@ -50,7 +56,7 @@ export default function Leaderboard() {
 
                 <div className="p-6">
                     <div className="space-y-4">
-                        {stats.map((dept: any, index: number) => (
+                        {stats.map((dept, index: number) => (
                             <motion.div 
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}

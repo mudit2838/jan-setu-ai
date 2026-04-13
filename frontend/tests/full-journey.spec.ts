@@ -62,7 +62,6 @@ test.describe('Bharat JanSetu - Full Lifecycle Test', () => {
             await expect(page.locator('text=AI Analysis Complete')).toBeVisible();
         });
 
-        let complaintId = '';
 
         // ----------------------------------------------------------------------
         // STEP 3: LOGOUT CITIZEN, LOGIN AS OFFICIAL

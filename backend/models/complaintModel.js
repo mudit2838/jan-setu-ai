@@ -24,6 +24,7 @@ const complaintSchema = mongoose.Schema(
         // Optional Geo Tagging
         latitude: { type: String },
         longitude: { type: String },
+        isGeoVerified: { type: Boolean, default: false }, // UP Bound Verification
 
         // Optional Media
         issueImage: { type: String },
@@ -87,6 +88,22 @@ const complaintSchema = mongoose.Schema(
         timestamps: true,
     }
 );
+
+// --- Strategic Performance Indexes ---
+// Citizen: Fetch personal complaints (Sorted by date)
+complaintSchema.index({ citizen: 1, createdAt: -1 });
+
+// Official: Scoped fetches (Block -> District -> State)
+complaintSchema.index({ department: 1, district: 1, block: 1, createdAt: -1 });
+complaintSchema.index({ department: 1, district: 1, createdAt: -1 });
+
+// Analytics: Status, Priority, Category aggregations
+complaintSchema.index({ status: 1, department: 1, district: 1 });
+complaintSchema.index({ priority: 1, department: 1, district: 1 });
+complaintSchema.index({ category: 1, department: 1, district: 1 });
+
+// Escalation Worker: Find overdue Pending tickets
+complaintSchema.index({ slaDueDate: 1, status: 1 });
 
 const Complaint = mongoose.model("Complaint", complaintSchema);
 

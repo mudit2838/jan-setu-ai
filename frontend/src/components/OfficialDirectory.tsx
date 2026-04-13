@@ -8,8 +8,19 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
+interface Official {
+    _id: string;
+    name: string;
+    mobile: string;
+    email?: string;
+    role: string;
+    district?: string;
+    department?: string;
+    isActive: boolean;
+}
+
 export default function OfficialDirectory() {
-    const [officials, setOfficials] = useState<any[]>([]);
+    const [officials, setOfficials] = useState<Official[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [actionId, setActionId] = useState<string | null>(null);
@@ -98,8 +109,12 @@ export default function OfficialDirectory() {
                 department: 'General Administration'
             });
             fetchOfficials();
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Provisioning failed');
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                toast.error(error.response?.data?.message || 'Provisioning failed');
+            } else {
+                toast.error('Provisioning failed');
+            }
         } finally {
             setRegisterLoading(false);
         }
@@ -168,7 +183,7 @@ export default function OfficialDirectory() {
                             {filtered.length === 0 ? (
                                 <tr><td colSpan={5} className="p-12 text-center text-slate-400 italic font-medium">No officials found in the searched criteria</td></tr>
                             ) : (
-                                filtered.map((off: any) => (
+                                filtered.map((off) => (
                                     <tr key={off._id} className="hover:bg-blue-50/30 transition-colors group">
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-4">

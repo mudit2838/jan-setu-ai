@@ -19,6 +19,10 @@ export const registerCitizen = async (req, res) => {
             return res.status(400).json({ message: 'Missing mandatory fields' });
         }
 
+        if (mobile.length !== 10 || !/^\d+$/.test(mobile)) {
+            return res.status(400).json({ message: 'Mobile number must be exactly 10 numeric digits' });
+        }
+
         const userExists = await User.findOne({ mobile });
         if (userExists) {
             return res.status(400).json({ message: 'Mobile number already registered' });
@@ -65,6 +69,10 @@ export const registerOfficial = async (req, res) => {
     const { name, mobile, email, password, role, district, block, department } = req.body;
 
     try {
+        if (mobile.length !== 10 || !/^\d+$/.test(mobile)) {
+            return res.status(400).json({ message: 'Mobile number must be exactly 10 numeric digits' });
+        }
+
         const allowedRoles = ['official_block', 'official_district', 'official_state'];
         if (!allowedRoles.includes(role)) {
             return res.status(400).json({ message: 'Invalid official role' });
@@ -104,5 +112,45 @@ export const registerOfficial = async (req, res) => {
 
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+// @desc    Get all citizens (Scoped by Officer Jurisdiction)
+// @route   GET /api/users/citizens
+// @access  Private (Official/Admin)
+export const getCitizens = async (req, res) => {
+    try {
+        const { role, district, block } = req.user;
+        let query = { role: 'citizen' };
+
+        if (role === 'official_block') {
+            query.district = district;
+            query.block = block;
+        } else if (role === 'official_district') {
+            query.district = district;
+        }
+
+        const citizens = await User.find(query).select('-password').sort({ createdAt: -1 });
+        res.json(citizens);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching citizens', error: error.message });
+    }
+};
+
+// @desc    Get all officials (Scoped by Officer Jurisdiction)
+// @route   GET /api/users/officials
+// @access  Private (Admin/District Official)
+export const getOfficials = async (req, res) => {
+    try {
+        const { role, district } = req.user;
+        let query = { role: { $in: ['official_block', 'official_district', 'official_state'] } };
+
+        if (role !== 'admin' && role !== 'official_state') {
+            query.district = district;
+        }
+
+        const officials = await User.find(query).select('-password').sort({ role: 1 });
+        res.json(officials);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching officials', error: error.message });
     }
 };

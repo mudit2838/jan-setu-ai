@@ -75,7 +75,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     useEffect(() => {
         const storedLang = localStorage.getItem('janSetuLang') as Language;
         if (storedLang && (storedLang === 'en' || storedLang === 'hi')) {
-            setLanguage(storedLang);
+            queueMicrotask(() => setLanguage(storedLang));
         }
     }, []);
 
@@ -88,8 +88,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     const t = (key: string): string => {
-        // @ts-ignore
-        return translations[language][key] || key;
+        return translations[language][key as keyof typeof translations['en']] || key;
     };
 
     return (

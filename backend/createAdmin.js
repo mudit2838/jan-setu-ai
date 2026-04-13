@@ -42,10 +42,10 @@ const createAdmin = async () => {
 
         console.log('🚀 Admin created successfully!');
         console.log('---------------------------');
-        console.log(`Name: ${newAdmin.name}`);
-        console.log(`Mobile: ${newAdmin.mobile}`);
-        console.log(`Email: ${newAdmin.email}`);
-        console.log(`Role: ${newAdmin.role}`);
+        console.log(`Name:  ${newAdmin.name}`);
+        console.log(`Email: ${newAdmin.email} (Required for Official Login)`);
+        console.log(`Mobile: ${newAdmin.mobile} (10-digits verified)`);
+        console.log(`Role:  ${newAdmin.role}`);
         console.log('---------------------------');
 
         process.exit();

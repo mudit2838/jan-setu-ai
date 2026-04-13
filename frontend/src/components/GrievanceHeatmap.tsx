@@ -12,16 +12,24 @@ const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLaye
 const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 
+interface HeatmapPoint {
+    lat: number;
+    lng: number;
+    district: string;
+    weight: number;
+    dept: string;
+}
+
 export default function GrievanceHeatmap() {
-    const [points, setPoints] = useState<any[]>([]);
+    const [points, setPoints] = useState<HeatmapPoint[]>([]);
     const [loading, setLoading] = useState(true);
-    const [L, setL] = useState<any>(null);
+    const [L, setL] = useState<typeof import('leaflet') | null>(null);
 
     useEffect(() => {
         // Initialize Leaflet icons on client side
         import('leaflet').then((leaflet) => {
             setL(leaflet);
-            delete (leaflet.Icon.Default.prototype as any)._getIconUrl;
+            delete (leaflet.Icon.Default.prototype as typeof leaflet.Icon.Default.prototype & { _getIconUrl?: string })._getIconUrl;
             leaflet.Icon.Default.mergeOptions({
                 iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
                 iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',

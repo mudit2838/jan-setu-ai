@@ -23,7 +23,7 @@ export default function FeaturesPage() {
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="text-center mb-16">
                         <h1 className="text-4xl font-extrabold text-slate-900 mb-4">Platform Features</h1>
-                        <p className="text-lg text-slate-500 max-w-2xl mx-auto">Discover the enterprise-grade tools powering the state's most advanced civic grievance portal.</p>
+                        <p className="text-lg text-slate-500 max-w-2xl mx-auto">Discover the enterprise-grade tools powering the state&apos;s most advanced civic grievance portal.</p>
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -52,7 +52,7 @@ export default function FeaturesPage() {
                                 <ShieldCheck className="w-7 h-7" />
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 mb-3">Verified Proof of Work</h3>
-                            <p className="text-slate-600 leading-relaxed">Unlike traditional systems, complaints cannot be blindly marked as 'Resolved'. Officials must upload photographic proof of the repaired infrastructure to close the loop.</p>
+                            <p className="text-slate-600 leading-relaxed">Unlike traditional systems, complaints cannot be blindly marked as &apos;Resolved&apos;. Officials must upload photographic proof of the repaired infrastructure to close the loop.</p>
                         </div>
 
                         {/* Feature 4 */}

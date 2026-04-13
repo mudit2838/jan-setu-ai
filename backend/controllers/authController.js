@@ -15,49 +15,36 @@ const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// @desc    Direct Login (Mobile/Email + Password - No OTP)
-// @route   POST /api/users/login
+// @desc    Citizen Login (Mobile + Password)
+// @route   POST /api/users/login/citizen
 // @access  Public
-export const loginUser = async (req, res) => {
-    const { email, mobile, password } = req.body;
-    let user;
+export const loginCitizen = async (req, res) => {
+    const { mobile, password } = req.body;
 
     try {
-        if (!password) {
-            return res.status(400).json({ message: 'Password is required' });
+        if (!mobile || !password) {
+            return res.status(400).json({ message: 'Mobile and password are required' });
         }
 
-        // --- 1. Identify User (Admin vs Citizen) ---
-        if (email) {
-            user = await Admin.findOne({ email });
-            if (!user) user = await User.findOne({ email });
-        } else if (mobile) {
-            user = await Admin.findOne({ mobile });
-            if (!user) user = await User.findOne({ mobile, isActive: true });
-        } else {
-            return res.status(400).json({ message: 'Please provide either mobile number or email' });
+        if (mobile.length !== 10 || !/^\d+$/.test(mobile)) {
+            return res.status(400).json({ message: 'Mobile number must be exactly 10 numeric digits' });
         }
+
+        const user = await User.findOne({ mobile, role: 'citizen', isActive: true });
 
         if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials or account not active' });
+            return res.status(401).json({ message: 'Account not found or not registered as a Citizen. Check which portal you are using.' });
         }
 
         // --- 2. Check Account Status ---
-        if (user.isLocked) {
-            if (user.lockUntil && user.lockUntil > new Date()) {
-                return res.status(403).json({ message: 'Account temporarily locked. Please try again later.' });
-            } else {
-                user.isLocked = false;
-                user.failedLoginAttempts = 0;
-                user.lockUntil = null;
-                await user.save();
-            }
+        if (user.isLocked && user.lockUntil && user.lockUntil > new Date()) {
+            return res.status(403).json({ message: 'Account temporarily locked.' });
         }
 
         // --- 3. Verify Password ---
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            user.failedLoginAttempts += 1;
+            user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
             if (user.failedLoginAttempts >= 5) {
                 user.isLocked = true;
                 user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
@@ -66,19 +53,20 @@ export const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // --- 4. Success - Return Token ---
+        // --- 4. Success ---
         user.failedLoginAttempts = 0;
+        user.isLocked = false;
+        user.lockUntil = null;
         await user.save();
 
         res.json({
             _id: user._id,
             name: user.name,
-            email: user.email,
             mobile: user.mobile,
             role: user.role,
             district: user.district,
             token: generateToken(user._id),
-            message: `Successfully logged in as ${user.role}`
+            message: 'Citizen login successful'
         });
 
     } catch (error) {
@@ -86,45 +74,65 @@ export const loginUser = async (req, res) => {
     }
 };
 
-// @desc    Mock DigiLocker OAuth Login / Auto-Registration
-// @route   POST /api/users/login/digilocker
+// @desc    Official Login (Email + Password)
+// @route   POST /api/users/login/official
 // @access  Public
-export const authDigilockerUser = async (req, res) => {
-    const { name, mobile, aadhaar, state, district, block, village, pincode } = req.body;
+export const loginOfficial = async (req, res) => {
+    const { email, password } = req.body;
+    let user;
 
     try {
-        // 1. Check if user already exists
-        let user = await User.findOne({ mobile });
-
-        // 2. If not, auto-register them seamlessly
-        if (!user) {
-            user = await User.create({
-                name,
-                mobile,
-                role: 'citizen',
-                state,
-                district,
-                block,
-                village,
-                pincode,
-                isActive: true // DigiLocker is pre-verified KYC data
-            });
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password are required' });
         }
 
-        // 3. Log them in directly bypassing OTPs/Passwords
+        // Check Admin model first (Super Admin)
+        user = await Admin.findOne({ email });
+
+        // Check User model if not in Admin model
+        if (!user) {
+            user = await User.findOne({ email, isActive: true });
+        }
+
+        if (!user || user.role === 'citizen') {
+            return res.status(401).json({ message: 'Access denied: Only officials can login here.' });
+        }
+
+        // --- 2. Check Account Status ---
+        if (user.isLocked && user.lockUntil && user.lockUntil > new Date()) {
+            return res.status(403).json({ message: 'Account temporarily locked.' });
+        }
+
+        // --- 3. Verify Password ---
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+            if (user.failedLoginAttempts >= 5) {
+                user.isLocked = true;
+                user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+            }
+            await user.save();
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // --- 4. Success ---
+        user.failedLoginAttempts = 0;
+        user.isLocked = false;
+        user.lockUntil = null;
+        await user.save();
+
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
-            mobile: user.mobile,
             role: user.role,
             district: user.district,
             token: generateToken(user._id),
-            message: `DigiLocker KYC Seamless Login Successful.`
+            message: `Official login successful as ${user.role}`
         });
 
     } catch (error) {
-        console.error("DigiLocker Auth Error:", error);
-        res.status(500).json({ message: 'DigiLocker Auth Error', error: error.message });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+

@@ -1,6 +1,6 @@
 import express from 'express';
-import { registerCitizen, registerOfficial } from '../controllers/userController.js';
-import { loginUser, authDigilockerUser } from '../controllers/authController.js';
+import { registerCitizen, registerOfficial, getCitizens, getOfficials } from '../controllers/userController.js';
+import { loginCitizen, loginOfficial } from '../controllers/authController.js';
 import { getDistricts, getBlocks, getVillages } from '../utils/locationData.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -22,11 +22,13 @@ router.get('/locations/villages/:district/:block', (req, res) => {
 // Citizen Registration API (Direct)
 router.post('/register', registerCitizen);
 
-// Unified Login API (Direct - No OTP)
-router.post('/login', loginUser);
-router.post('/login/digilocker', authDigilockerUser);
+// Separate Login APIs
+router.post('/login/citizen', loginCitizen);
+router.post('/login/official', loginOfficial);
 
 // Admin-Only Operations
 router.post('/admin/register-official', protect, admin, registerOfficial);
+router.get('/citizens', protect, getCitizens); // Scoped citizens
+router.get('/officials', protect, getOfficials); // Scoped officials
 
 export default router;

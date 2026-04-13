@@ -32,7 +32,7 @@ export default function HowItWorksPage() {
                         <div className="relative flex flex-col md:flex-row items-center gap-8 group">
                             <div className="md:w-1/2 md:text-right pr-0 md:pr-12 pl-12 md:pl-0">
                                 <h3 className="text-2xl font-bold text-slate-900 mb-2">1. Report an Issue</h3>
-                                <p className="text-slate-600 leading-relaxed">Simply upload a photo, drop your location pin using your phone's GPS, and describe the problem in a few words (English or Hindi).</p>
+                                <p className="text-slate-600 leading-relaxed">Simply upload a photo, drop your location pin using your phone&apos;s GPS, and describe the problem in a few words (English or Hindi).</p>
                             </div>
                             <div className="absolute left-[-22px] md:relative md:left-auto md:w-16 md:h-16 bg-white border-4 border-orange-500 rounded-full flex items-center justify-center shrink-0 z-10 shadow-lg">
                                 <Search className="w-6 h-6 text-orange-500" />
@@ -68,7 +68,7 @@ export default function HowItWorksPage() {
                         <div className="relative flex flex-col md:flex-row-reverse items-center gap-8 group">
                             <div className="md:w-1/2 pl-12 md:pl-12">
                                 <h3 className="text-2xl font-bold text-slate-900 mb-2">4. Verified Resolution</h3>
-                                <p className="text-slate-600 leading-relaxed">When the official completes the work, they must upload a 'Proof of Action' image. You will be notified via SMS to verify the work and rate the resolution.</p>
+                                <p className="text-slate-600 leading-relaxed">When the official completes the work, they must upload a &apos;Proof of Action&apos; image. You will be notified via SMS to verify the work and rate the resolution.</p>
                             </div>
                             <div className="absolute left-[-22px] md:relative md:left-auto md:w-16 md:h-16 bg-white border-4 border-green-500 rounded-full flex items-center justify-center shrink-0 z-10 shadow-lg">
                                 <CheckCircle className="w-6 h-6 text-green-500" />

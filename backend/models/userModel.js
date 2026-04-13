@@ -10,6 +10,12 @@ const userSchema = mongoose.Schema(
             type: String,
             required: true,
             unique: true,
+            validate: {
+                validator: function(v) {
+                    return v.length === 10 && /^\d+$/.test(v);
+                },
+                message: props => `${props.value} is not a valid 10-digit mobile number!`
+            }
         },
         email: {
             type: String,
@@ -67,6 +73,13 @@ const userSchema = mongoose.Schema(
         timestamps: true,
     }
 );
+
+// --- Strategic Performance Indexes ---
+// Official Login (Email) - Sparse as not all citizens have emails
+userSchema.index({ email: 1 }, { sparse: true });
+
+// Scoped Hierarchy (Role -> District -> Department)
+userSchema.index({ role: 1, district: 1, department: 1 });
 
 const User = mongoose.model("User", userSchema);
 

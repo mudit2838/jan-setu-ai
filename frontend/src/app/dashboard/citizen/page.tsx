@@ -15,20 +15,53 @@ const MapDisplay = dynamic(() => import('@/components/MapDisplay'), {
     loading: () => <div className="h-[200px] w-full bg-slate-100 animate-pulse rounded-xl border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 text-sm font-medium">Loading Map Sandbox...</div>
 });
 
+interface CitizenData {
+    name: string;
+    district: string;
+    state?: string;
+    block?: string;
+    village?: string;
+    mobile?: string;
+    email?: string;
+}
+
+interface Escalation {
+    toLevel: string;
+    escalatedAt: string;
+    reason: string;
+}
+
+interface ComplaintData {
+    _id: string;
+    title: string;
+    description: string;
+    status: string;
+    priority: string;
+    department: string;
+    assignedToLevel: string;
+    createdAt: string;
+    slaDueDate?: string;
+    issueImage?: string;
+    proofImage?: string;
+    officerRemarks?: string;
+    escalationHistory?: Escalation[];
+}
+
 export default function CitizenDashboard() {
     const router = useRouter();
     const { t, language, toggleLanguage } = useLanguage();
     const [activeTab, setActiveTab] = useState('list'); // 'list' | 'new' | 'feedback'
     const [accountSubTab, setAccountSubTab] = useState('profile'); // 'profile' | 'security' | 'activity'
+    const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
     const [viewImageUrl, setViewImageUrl] = useState<string | null>(null);
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<CitizenData | null>(null);
 
     // Complaint List State
-    const [complaints, setComplaints] = useState([]);
+    const [complaints, setComplaints] = useState<ComplaintData[]>([]);
     const [loadingList, setLoadingList] = useState(true);
 
     // Feedback State
-    const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
+    const [selectedComplaint, setSelectedComplaint] = useState<ComplaintData | null>(null);
     const [feedbackLoading, setFeedbackLoading] = useState(false);
     const [feedbackData, setFeedbackData] = useState({
         satisfactionLevel: '',
@@ -36,9 +69,9 @@ export default function CitizenDashboard() {
     });
 
     // New Complaint State
-    const [districts, setDistricts] = useState([]);
-    const [blocks, setBlocks] = useState([]);
-    const [villages, setVillages] = useState([]);
+    const [districts, setDistricts] = useState<string[]>([]);
+    const [blocks, setBlocks] = useState<string[]>([]);
+    const [villages, setVillages] = useState<string[]>([]);
     const [formLoading, setFormLoading] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -70,6 +103,13 @@ export default function CitizenDashboard() {
         }
     }, []);
 
+    // Proactive Location Capture Trigger
+    useEffect(() => {
+        if (activeTab === 'new' && !formData.latitude) {
+            captureLocation();
+        }
+    }, [activeTab]);
+
     const fetchComplaints = async () => {
         setLoadingList(true);
         try {
@@ -77,9 +117,9 @@ export default function CitizenDashboard() {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setComplaints(data);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to fetch complaints');
-            if (error.response?.status === 401) {
+            if (axios.isAxiosError(error) && error.response?.status === 401) {
                 localStorage.clear();
                 router.push('/login');
             }
@@ -109,15 +149,16 @@ export default function CitizenDashboard() {
         }
     };
 
-    // GeoLocation Tool
+    // GeoLocation Tool with Precision Stability Wait
     const captureLocation = () => {
         if (!navigator.geolocation) {
             toast.error('Geolocation is not supported by your browser');
             return;
         }
 
-        toast.loading('Requesting Location Access...', { id: 'gpsReq' });
+        toast.loading('Requesting Precision GPS Lock...', { id: 'gpsReq' });
 
+        // Implementation of high-accuracy stability wait
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 setFormData(prev => ({
@@ -125,7 +166,13 @@ export default function CitizenDashboard() {
                     latitude: position.coords.latitude.toString(),
                     longitude: position.coords.longitude.toString()
                 }));
-                toast.success('GPS Location Captured Successfully!', { id: 'gpsReq' });
+                setLocationAccuracy(position.coords.accuracy);
+                
+                if (position.coords.accuracy > 100) {
+                    toast.success('Location Tagged (Approximate)', { id: 'gpsReq', icon: '📍' });
+                } else {
+                    toast.success('Precision GPS Lock Secured!', { id: 'gpsReq', icon: '🎯' });
+                }
             },
             (error) => {
                 console.error("GPS Error Code:", error.code, "Message:", error.message);
@@ -197,8 +244,12 @@ export default function CitizenDashboard() {
                 fetchComplaints();
             }, 2000);
 
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to submit grievance');
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                toast.error(error.response?.data?.message || 'Failed to submit grievance');
+            } else {
+                toast.error('Failed to submit grievance');
+            }
         } finally {
             setFormLoading(false);
         }
@@ -213,15 +264,25 @@ export default function CitizenDashboard() {
         uploadData.append('image', file);
 
         try {
+            const token = localStorage.getItem('token');
             const { data } = await axios.post('http://localhost:5000/api/upload', uploadData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`
+                }
             });
-            // data.url returns the path "/uploads/..."
+            // data.url returns the s3 link or the local path
             setFormData(prev => ({ ...prev, issueImage: data.url }));
             setImagePreview(URL.createObjectURL(file));
-        } catch (error) {
+            toast.success('Evidence photo uploaded successfully.');
+        } catch (error: unknown) {
             console.error('Image upload failed', error);
-            toast.error('Failed to upload image. Please try again.');
+            if (axios.isAxiosError(error)) {
+                const serverError = error.response?.data?.error || error.response?.data?.message || 'Check your internet connection';
+                toast.error(`Upload Failed: ${serverError}`, { duration: 5000 });
+            } else {
+                toast.error('Upload Failed: Unknown error');
+            }
         } finally {
             setUploadingImage(false);
         }
@@ -300,14 +361,14 @@ export default function CitizenDashboard() {
                                 <div className="bg-white border text-center border-slate-200 rounded-2xl p-12 shadow-sm">
                                     <FileText className="w-16 h-16 text-slate-200 mx-auto mb-4" />
                                     <h2 className="text-xl font-semibold text-slate-700">{t('no_grievances')}</h2>
-                                    <p className="text-slate-500 mt-2 mb-6">You haven't reported any issues yet.</p>
+                                    <p className="text-slate-500 mt-2 mb-6">You haven&apos;t reported any issues yet.</p>
                                     <button onClick={() => setActiveTab('new')} className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors">
                                         {t('report_now')}
                                     </button>
                                 </div>
                             ) : (
                                 <div className="grid gap-4">
-                                    {complaints.map((c: any) => (
+                                    {complaints.map((c) => (
                                         <div key={c._id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
                                             <div className="flex justify-between items-start mb-4">
                                                 <div>
@@ -374,7 +435,7 @@ export default function CitizenDashboard() {
                                                     </div>
 
                                                     {/* Step 3: District Review (If Applicable) */}
-                                                    {(c.assignedToLevel === 'District' || c.assignedToLevel === 'State' || (c.escalationHistory && c.escalationHistory.some((h: any) => h.toLevel === 'District'))) && (
+                                                    {(c.assignedToLevel === 'District' || c.assignedToLevel === 'State' || (c.escalationHistory && c.escalationHistory.some((h) => h.toLevel === 'District'))) && (
                                                         <div className="flex gap-4">
                                                             <div className="flex flex-col items-center">
                                                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white ${c.status === 'Resolved' || c.status === 'Closed Permanently' || c.assignedToLevel === 'State' ? 'bg-green-500' : 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]'}`}>
@@ -390,7 +451,7 @@ export default function CitizenDashboard() {
                                                     )}
 
                                                     {/* Step 4: State Review (If Applicable) */}
-                                                    {(c.assignedToLevel === 'State' || (c.escalationHistory && c.escalationHistory.some((h: any) => h.toLevel === 'State'))) && (
+                                                    {(c.assignedToLevel === 'State' || (c.escalationHistory && c.escalationHistory.some((h) => h.toLevel === 'State'))) && (
                                                         <div className="flex gap-4">
                                                             <div className="flex flex-col items-center">
                                                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white ${c.status === 'Resolved' || c.status === 'Closed Permanently' ? 'bg-green-500' : 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]'}`}>
@@ -546,7 +607,7 @@ export default function CitizenDashboard() {
                                             </div>
                                             <div className="flex-1">
                                                 <h4 className="font-semibold text-slate-800 text-sm">Use Automated GPS (Recommended)</h4>
-                                                <p className="text-xs text-slate-500 mt-1 mb-3">Capturing exact coordinates vastly speeds up the resolution team's dispatch.</p>
+                                                <p className="text-xs text-slate-500 mt-1 mb-3">Capturing exact coordinates vastly speeds up the resolution team&apos;s dispatch.</p>
 
                                                 <button type="button" onClick={captureLocation} className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                                                     Capture My Location
@@ -555,8 +616,15 @@ export default function CitizenDashboard() {
                                                 {formData.latitude && (
                                                     <div className="mt-4">
                                                         <MapDisplay latitude={formData.latitude} longitude={formData.longitude} />
-                                                        <div className="mt-3 text-xs font-mono font-medium text-green-700 bg-green-50 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 border border-green-200">
-                                                            <CheckCircle className="w-3.5 h-3.5" /> Coordinates Locked: [{Number(formData.latitude).toFixed(4)}, {Number(formData.longitude).toFixed(4)}]
+                                                        <div className="flex flex-wrap gap-2 mt-3">
+                                                            <div className="text-xs font-mono font-medium text-green-700 bg-green-50 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 border border-green-200">
+                                                                <CheckCircle className="w-3.5 h-3.5" /> Coordinates Locked: [{Number(formData.latitude).toFixed(4)}, {Number(formData.longitude).toFixed(4)}]
+                                                            </div>
+                                                            {locationAccuracy && (
+                                                                <div className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border flex items-center gap-1.5 ${locationAccuracy < 30 ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                                                                    <ShieldCheck className="w-3.5 h-3.5" /> Accuracy: {locationAccuracy.toFixed(1)}m {locationAccuracy < 30 ? '(High Precision)' : '(Standard)'}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 )}
@@ -859,7 +927,7 @@ export default function CitizenDashboard() {
                                             
                                             <div className="space-y-6">
                                                 {complaints.length > 0 ? (
-                                                    complaints.slice(0, 5).map((c: any, i) => (
+                                                    complaints.slice(0, 5).map((c, i) => (
                                                         <div key={i} className="flex gap-4 group">
                                                             <div className="flex flex-col items-center">
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-600 group-hover:scale-150 transition-transform"></div>

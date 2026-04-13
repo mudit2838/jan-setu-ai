@@ -10,6 +10,12 @@ const adminSchema = mongoose.Schema(
             type: String,
             required: true,
             unique: true,
+            validate: {
+                validator: function(v) {
+                    return v.length === 10 && /^\d+$/.test(v);
+                },
+                message: props => `${props.value} is not a valid 10-digit mobile number!`
+            }
         },
         email: {
             type: String,

@@ -3,21 +3,20 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, UserPlus, Phone, Lock, User, MapPin, KeyRound } from 'lucide-react';
+import { UserPlus, Phone, Lock, User } from 'lucide-react';
 import Link from 'next/link';
 
 export default function RegisterPage() {
     const router = useRouter();
 
     // UI State
-    const [step, setStep] = useState(1); // 1 = Details, 2 = OTP
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
 
     // Location Data State
-    const [districts, setDistricts] = useState([]);
-    const [blocks, setBlocks] = useState([]);
-    const [villages, setVillages] = useState([]);
+    const [districts, setDistricts] = useState<string[]>([]);
+    const [blocks, setBlocks] = useState<string[]>([]);
+    const [villages, setVillages] = useState<string[]>([]);
 
     // Form Data
     const [formData, setFormData] = useState({
@@ -33,7 +32,7 @@ export default function RegisterPage() {
         addressLine: ''
     });
 
-    const [otp, setOtp] = useState('');
+    // const [otp, setOtp] = useState(''); (Removed unused OTP field)
 
     // Fetch initial districts on load
     useEffect(() => {
@@ -101,11 +100,16 @@ export default function RegisterPage() {
             return;
         }
 
+        if (formData.mobile.length !== 10) {
+            setMessage({ text: 'Mobile number must be exactly 10 digits.', type: 'error' });
+            return;
+        }
+
         setLoading(true);
         setMessage({ text: '', type: '' });
 
         try {
-            const { data } = await axios.post('http://localhost:5000/api/users/register', formData);
+            await axios.post('http://localhost:5000/api/users/register', formData);
 
             setMessage({ text: 'Registration successful! Redirecting to login...', type: 'success' });
 
@@ -113,11 +117,18 @@ export default function RegisterPage() {
                 router.push('/login');
             }, 1500);
 
-        } catch (error: any) {
-            setMessage({
-                text: error.response?.data?.message || 'Failed to complete registration',
-                type: 'error'
-            });
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                setMessage({
+                    text: error.response?.data?.message || 'Failed to complete registration',
+                    type: 'error'
+                });
+            } else {
+                setMessage({
+                    text: 'Failed to complete registration',
+                    type: 'error'
+                });
+            }
         } finally {
             setLoading(false);
         }
@@ -269,25 +280,6 @@ export default function RegisterPage() {
                         >
                             {loading ? 'Processing...' : 'Create Account'}
                         </button>
-
-                        <div className="mt-6">
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-slate-200"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-white text-slate-500">Or register instantly with</span>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => router.push('/digilocker-mock')}
-                                className="mt-6 w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-slate-200 rounded-xl shadow-sm text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
-                            >
-                                <span className="text-blue-700 font-bold border-r border-slate-300 pr-2">Meri Pehchaan</span>
-                                <span>Verify via DigiLocker KYC</span>
-                            </button>
-                        </div>
                     </form>
 
                 </div>

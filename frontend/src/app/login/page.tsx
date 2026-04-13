@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Phone, Mail, Lock, KeyRound } from 'lucide-react';
+import { ShieldCheck, Phone, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
@@ -11,34 +11,38 @@ import { motion } from 'framer-motion';
 export default function LoginPage() {
     const router = useRouter();
 
+    const [loading, setLoading] = useState(false);
+
     // UI State
     const [isAdminMode, setIsAdminMode] = useState(false);
-    const [isHighSecurityCitizen, setIsHighSecurityCitizen] = useState(false);
-    const [step, setStep] = useState(1); // 1 = Creds, 2 = OTP
-    const [loading, setLoading] = useState(false);
 
     // Form Data
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [otp, setOtp] = useState('');
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const payload: any = {};
+            const payload: Record<string, string> = {};
 
             if (isAdminMode) {
                 payload.email = email;
                 payload.password = password;
             } else {
+                if (mobile.length !== 10) {
+                    toast.error('Mobile number must be exactly 10 digits');
+                    setLoading(false);
+                    return;
+                }
                 payload.mobile = mobile;
                 payload.password = password;
             }
 
-            const { data } = await axios.post('http://localhost:5000/api/users/login', payload);
+            const endpoint = isAdminMode ? '/api/users/login/official' : '/api/users/login/citizen';
+            const { data } = await axios.post(`http://localhost:5000${endpoint}`, payload);
 
             // Save token
             localStorage.setItem('token', data.token);
@@ -54,8 +58,12 @@ export default function LoginPage() {
                 }
             }, 1000);
 
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Login failed. Please check credentials.');
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                toast.error(error.response?.data?.message || 'Login failed. Please check credentials.');
+            } else {
+                toast.error('Login failed. Please check credentials.');
+            }
         } finally {
             setLoading(false);
         }
@@ -164,25 +172,6 @@ export default function LoginPage() {
                         >
                             {loading ? 'Authenticating...' : 'Secure Login'}
                         </button>
-
-                        <div className="mt-6">
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-slate-200"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-white text-slate-500">Or continue with</span>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => router.push('/digilocker-mock')}
-                                className="mt-6 w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-slate-200 rounded-xl shadow-sm text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
-                            >
-                                <span className="text-blue-700 font-bold border-r border-slate-300 pr-2">Meri Pehchaan</span>
-                                <span>Login via DigiLocker</span>
-                            </button>
-                        </div>
                     </form>
 
                 </div>

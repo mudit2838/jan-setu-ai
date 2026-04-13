@@ -13,9 +13,21 @@ const GrievanceHeatmap = dynamic(() => import('@/components/GrievanceHeatmap'), 
     loading: () => <div className="h-[500px] w-full bg-slate-100 animate-pulse rounded-3xl border border-slate-200 flex items-center justify-center text-slate-400 font-bold uppercase tracking-widest">Initialising Public Heatmap...</div>
 });
 
+interface PublicStats {
+    total: number;
+    resolved: number;
+    pending: number;
+    publicSatisfaction: number;
+}
+
+interface DepartmentLeader {
+    department: string;
+    resolutionRate: number;
+}
+
 export default function PublicAnalytics() {
-    const [stats, setStats] = useState<any>(null);
-    const [leaderboard, setLeaderboard] = useState([]);
+    const [stats, setStats] = useState<PublicStats | null>(null);
+    const [leaderboard, setLeaderboard] = useState<DepartmentLeader[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -93,7 +105,7 @@ export default function PublicAnalytics() {
                             <div className={`${kpi.bg} ${kpi.color} w-12 h-12 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                                 <kpi.icon className="w-6 h-6" />
                             </div>
-                            <div className="text-3xl font-black text-slate-900 mb-1">{kpi.value.toLocaleString()}</div>
+                            <div className="text-3xl font-black text-slate-900 mb-1">{kpi.value?.toLocaleString() ?? '0'}</div>
                             <div className="text-xs font-black text-slate-400 uppercase tracking-widest">{kpi.label}</div>
                         </motion.div>
                     ))}

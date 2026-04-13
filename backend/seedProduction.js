@@ -131,6 +131,10 @@ const seedDB = async () => {
 
             slaDueDate = new Date(createdDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // Local SLA
 
+            // Lucknow Geofencing (Sadar / Hazratganj Area)
+            const lat = 26.8467 + (Math.random() - 0.5) * 0.1;
+            const lng = 80.9462 + (Math.random() - 0.5) * 0.1;
+
             complaints.push({
                 citizen: citizen._id,
                 title: titles[Math.floor(Math.random() * titles.length)] + ` - Zone ${i}`,
@@ -138,13 +142,23 @@ const seedDB = async () => {
                 district: 'Lucknow',
                 block: 'Sadar',
                 village: 'Sector ' + Math.floor(Math.random() * 20),
+                latitude: lat.toFixed(6),
+                longitude: lng.toFixed(6),
                 category: 'Infrastructure',
                 department: departments[Math.floor(Math.random() * departments.length)],
                 priority: priority,
                 status: status,
                 assignedToLevel: assignedToLevel,
                 createdAt: createdDate,
-                slaDueDate: slaDueDate
+                slaDueDate: slaDueDate,
+                escalationHistory: status.includes('Escalated') ? [
+                    {
+                        fromLevel: 'Local',
+                        toLevel: 'District',
+                        escalatedAt: new Date(createdDate.getTime() + (3 * 24 * 60 * 60 * 1000)),
+                        reason: 'SLA Breached at Local level.'
+                    }
+                ] : []
             });
         }
 
@@ -154,8 +168,8 @@ const seedDB = async () => {
         console.log('\n=============================================');
         console.log('🎉 SEEDING COMPLETE! YOUR PRODUCTION DB IS READY!');
         console.log('Login inside your app with:');
-        console.log('Mobile: 9999999999 (Admin) | Pass: mudit123');
-        console.log('Mobile: 8888888888 (Local Officer) | Pass: mudit123');
+        console.log('Email: admin@up.gov.in (Admin) | Pass: mudit123');
+        console.log('Email: local@up.gov.in (Local Officer) | Pass: mudit123');
         console.log('=============================================\n');
 
         process.exit();
