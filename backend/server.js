@@ -8,6 +8,7 @@ import userRoutes from './routes/userRoutes.js';
 import complaintRoutes from './routes/complaintRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import masterRoutes from './routes/masterRoutes.js';
+import sseRoutes from './routes/sseRoutes.js';
 import { startEscalationCron } from './services/escalationService.js';
 import path from 'path';
 import pino from 'pino';
@@ -31,7 +32,19 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+const allowedOrigins = process.env.ALLOWED_ORIGIN ? process.env.ALLOWED_ORIGIN.split(',') : ['http://localhost:3000'];
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true
+}));
 
 // Internal Request Logger Middleware
 app.use((req, res, next) => {
@@ -70,6 +83,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/master', masterRoutes);
+app.use('/api/events', sseRoutes);
 
 // Expose the uploads folder statically
 const __dirname = path.resolve();

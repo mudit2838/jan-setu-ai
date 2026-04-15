@@ -37,6 +37,7 @@ import MetricCard from '@/components/dashboard/MetricCard';
 import DeptLoadChart from '@/components/dashboard/DeptLoadChart';
 import WeeklyChart from '@/components/dashboard/WeeklyChart';
 import { ComplaintMapData } from '@/components/dashboard/JanSetuMap';
+import API_ROUTES from '@/lib/apiConfig';
 
 interface UserData {
     name: string;
@@ -84,6 +85,16 @@ interface Escalation {
     reason: string;
 }
 
+interface Notification {
+    id: string;
+    type: 'new' | 'update' | 'escalation';
+    title: string;
+    message: string;
+    time: Date;
+    isRead: boolean;
+    complaintId: string;
+}
+
 export default function EnhancedOfficialDashboard() {
     const router = useNextRouter();
     const [user, setUser] = useState<UserData | null>(null);
@@ -115,15 +126,14 @@ export default function EnhancedOfficialDashboard() {
     const [uploading, setUploading] = useState(false);
     const [lastSync, setLastSync] = useState(new Date());
     const [modalTab, setModalTab] = useState('detail'); // 'detail' or 'history'
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [viewImageUrl, setViewImageUrl] = useState<string | null>(null);
 
     // Helper to get full image URL
     const getFullImageUrl = (url?: string) => {
         if (!url) return '';
-        if (url.startsWith('http')) return url;
-        // Ensure no double slashes if url starts with /
-        const path = url.startsWith('/') ? url : `/${url}`;
-        return `http://localhost:5000${path}`;
+        return API_ROUTES.UPLOADS(url);
     };
     
     useEffect(() => {
@@ -139,19 +149,95 @@ export default function EnhancedOfficialDashboard() {
         setUser(userData);
         fetchAllData(token);
 
-        // Real-time Sync Polling: 30 Seconds
-        const syncInterval = setInterval(() => {
-            fetchAllData(token);
-        }, 30000);
+        // --- Real-time SSE Connection ---
+        const eventSource = new EventSource(`${API_ROUTES.EVENT_STREAM}?token=${token}`);
 
-        return () => clearInterval(syncInterval);
+        eventSource.addEventListener('NEW_COMPLAINT', (e) => {
+            const data = JSON.parse(e.data);
+            const isRelevant = !userData.district || data.district === userData.district;
+            if (isRelevant) {
+                const newNotif: Notification = {
+                    id: Date.now().toString(),
+                    type: 'new',
+                    title: 'New Grievance Registered',
+                    message: data.title,
+                    time: new Date(),
+                    isRead: false,
+                    complaintId: data._id
+                };
+                setNotifications(prev => [newNotif, ...prev].slice(0, 20));
+
+                toast(`🆕 New Grievance: ${data.title}`, { 
+                    icon: '📋',
+                    duration: 6000,
+                    position: 'top-right',
+                    style: { 
+                        borderRadius: '16px', 
+                        background: '#1e293b', 
+                        color: '#fff',
+                        fontSize: '13px',
+                        fontWeight: '600'
+                    }
+                });
+                fetchAllData(token);
+            }
+        });
+
+        eventSource.addEventListener('STATUS_UPDATE', (e) => {
+            const data = JSON.parse(e.data);
+            const isRelevant = !userData.district || data.district === userData.district;
+            if (isRelevant) {
+                const newNotif: Notification = {
+                    id: Date.now().toString(),
+                    type: 'update',
+                    title: 'Grievance Status Updated',
+                    message: `Ticket #${data.shortId} is now ${data.status}`,
+                    time: new Date(),
+                    isRead: false,
+                    complaintId: data.complaintId || data._id
+                };
+                setNotifications(prev => [newNotif, ...prev].slice(0, 20));
+
+                toast(`🔄 Ticket #${data.shortId} updated: ${data.status}`, { 
+                    icon: '✅',
+                    position: 'top-right'
+                });
+                fetchAllData(token);
+            }
+        });
+
+        eventSource.addEventListener('ESCALATION', (e) => {
+            const data = JSON.parse(e.data);
+            const isRelevant = !userData.district || data.district === userData.district;
+            if (isRelevant) {
+                const newNotif: Notification = {
+                    id: Date.now().toString(),
+                    type: 'escalation',
+                    title: 'CRITICAL: SLA Breach Escalation',
+                    message: `Ticket #${data.shortId} moved to ${data.newLevel}`,
+                    time: new Date(),
+                    isRead: false,
+                    complaintId: data.complaintId || data._id
+                };
+                setNotifications(prev => [newNotif, ...prev].slice(0, 20));
+
+                toast.error(`⚠️ Ticket #${data.shortId} ESCALATED to ${data.newLevel}!`, { 
+                    duration: 8000,
+                    position: 'top-right'
+                });
+                fetchAllData(token);
+            }
+        });
+
+        return () => {
+            eventSource.close();
+        };
     }, []);
 
     const fetchAllData = async (token: string) => {
         setLoading(true);
         try {
             const headers = { Authorization: `Bearer ${token}` };
-            const baseUrl = 'http://localhost:5000/api/complaints';
 
             const [
                 analyticsRes,
@@ -161,12 +247,12 @@ export default function EnhancedOfficialDashboard() {
                 escRes,
                 fullRes
             ] = await Promise.all([
-                axios.get(`${baseUrl}/analytics`, { headers }),
-                axios.get(`${baseUrl}/recent?limit=3`, { headers }),
-                axios.get(`${baseUrl}/weekly`, { headers }),
-                axios.get(`${baseUrl}/departments/load`, { headers }),
-                axios.get(`${baseUrl}/escalations/active`, { headers }),
-                axios.get(`${baseUrl}/admin`, { headers })
+                axios.get(API_ROUTES.ANALYTICS, { headers }),
+                axios.get(`${API_ROUTES.RECENT}?limit=3`, { headers }),
+                axios.get(API_ROUTES.WEEKLY, { headers }),
+                axios.get(API_ROUTES.DEPT_LOAD, { headers }),
+                axios.get(API_ROUTES.ESCALATIONS, { headers }),
+                axios.get(API_ROUTES.ADMIN_LIST, { headers })
             ]);
 
             setAnalytics(analyticsRes.data);
@@ -176,11 +262,10 @@ export default function EnhancedOfficialDashboard() {
             setFullComplaints(fullRes.data);
 
             // Conditional Admin/List Fetches
-            const userBaseUrl = 'http://localhost:5000/api/users';
             const [citRes, offRes, distRes] = await Promise.all([
-                axios.get(`${userBaseUrl}/citizens`, { headers }),
-                axios.get(`${userBaseUrl}/officials`, { headers }),
-                axios.get(`${baseUrl}/districts/stats`, { headers })
+                axios.get(API_ROUTES.CITIZENS, { headers }),
+                axios.get(API_ROUTES.OFFICIALS, { headers }),
+                axios.get(`${API_ROUTES.HEATMAP}/stats`, { headers })
             ]);
             setCitizens(citRes.data);
             setOfficials(offRes.data);
@@ -250,7 +335,7 @@ export default function EnhancedOfficialDashboard() {
 
         try {
             const token = localStorage.getItem('token');
-            const { data } = await axios.post('http://localhost:5000/api/upload', formData, {
+            const { data } = await axios.post(API_ROUTES.UPLOAD, formData, {
                 headers: { 
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${token}`
@@ -270,7 +355,7 @@ export default function EnhancedOfficialDashboard() {
         setAiLoading(true);
         try {
             // Call local AI service
-            const { data } = await axios.post('http://localhost:8000/api/generate-response', {
+            const { data } = await axios.post(API_ROUTES.GENERATE_RESPONSE, {
                 department: selectedComplaint.department,
                 priority: selectedComplaint.priority,
                 issue: selectedComplaint.description
@@ -293,7 +378,7 @@ export default function EnhancedOfficialDashboard() {
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
             
-            await axios.put(`http://localhost:5000/api/complaints/${selectedComplaint._id}/status`, {
+            await axios.put(`${API_ROUTES.COMPLAINTS}/${selectedComplaint._id}/status`, {
                 status: actionForm.status,
                 remarks: actionForm.remarks + (actionForm.aiDraft ? `\n\nAI Draft: ${actionForm.aiDraft}` : ''),
                 proofImage: actionForm.proofImage
@@ -309,6 +394,29 @@ export default function EnhancedOfficialDashboard() {
                 toast.error('Failed to update status');
             }
         }
+    };
+
+    const handleMarkAllRead = () => {
+        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    };
+
+    const handleClearNotifications = () => {
+        setNotifications([]);
+        setIsNotificationOpen(false);
+    };
+
+    const handleNotificationClick = (notif: Notification) => {
+        // Find the complaint in our data
+        const complaint = fullComplaints.find(c => c._id === notif.complaintId) || 
+                          recentComplaints.find(c => c._id === notif.complaintId);
+        
+        if (complaint) {
+            handleOpenAction(complaint);
+        }
+        
+        // Mark as read
+        setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+        setIsNotificationOpen(false);
     };
 
     const filteredComplaints = fullComplaints.filter((c) => 
@@ -342,7 +450,7 @@ export default function EnhancedOfficialDashboard() {
                         <div className="w-8 h-8 bg-[#1D9E75] rounded-lg border-[0.5px] border-emerald-600 flex items-center justify-center text-white font-bold tracking-tighter shadow-lg shadow-emerald-500/20">
                             JS
                         </div>
-                        <span className="font-bold tracking-tight text-slate-900 text-lg">JanSetu AI</span>
+                        <span className="font-bold tracking-tight text-slate-900 text-lg">Bharat JanSetu AI</span>
                     </motion.div>
                 </div>
 
@@ -418,10 +526,67 @@ export default function EnhancedOfficialDashboard() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors relative">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-[#D85A30] border-2 border-white rounded-full"></span>
-                        </button>
+                        <div className="relative">
+                            <button 
+                                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                                className={`p-2 rounded-full transition-all relative ${isNotificationOpen ? 'bg-emerald-50 text-[#1D9E75]' : 'text-slate-400 hover:text-slate-900'}`}
+                            >
+                                <Bell className="w-5 h-5" />
+                                {notifications.some(n => !n.isRead) && (
+                                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#D85A30] border-2 border-white rounded-full animate-pulse"></span>
+                                )}
+                            </button>
+
+                            <AnimatePresence>
+                                {isNotificationOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border-[0.5px] border-slate-200 overflow-hidden z-50 origin-top-right"
+                                    >
+                                        <div className="p-4 border-b-[0.5px] border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                            <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-widest">Notifications</h4>
+                                            <div className="flex gap-2">
+                                                <button onClick={handleMarkAllRead} className="text-[9px] font-bold text-[#1D9E75] hover:underline uppercase">Mark Read</button>
+                                                <button onClick={handleClearNotifications} className="text-[9px] font-bold text-slate-400 hover:text-red-500 uppercase">Clear</button>
+                                            </div>
+                                        </div>
+
+                                        <div className="max-h-[350px] overflow-y-auto">
+                                            {notifications.length === 0 ? (
+                                                <div className="p-10 text-center">
+                                                    <Bell className="w-8 h-8 text-slate-200 mx-auto mb-3" />
+                                                    <p className="text-[11px] text-slate-400 font-medium">No alerts in the current stream</p>
+                                                </div>
+                                            ) : (
+                                                <div className="divide-y-[0.5px] divide-slate-100">
+                                                    {notifications.map((n) => (
+                                                        <div 
+                                                            key={n.id} 
+                                                            onClick={() => handleNotificationClick(n)}
+                                                            className={`p-4 hover:bg-slate-50 cursor-pointer transition-colors flex gap-3 ${!n.isRead ? 'bg-emerald-50/20' : ''}`}
+                                                        >
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                                                n.type === 'escalation' ? 'bg-red-50 text-red-600' :
+                                                                n.type === 'update' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'
+                                                            }`}>
+                                                                {n.type === 'escalation' ? <AlertCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                                                            </div>
+                                                            <div className="overflow-hidden">
+                                                                <h5 className="text-[12px] font-bold text-slate-900 truncate">{n.title}</h5>
+                                                                <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{n.message}</p>
+                                                                <p className="text-[9px] text-slate-400 font-medium mt-1">{new Date(n.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                         <button 
                             onClick={handleExportCSV}
                             className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-[12px] font-semibold hover:bg-slate-800 transition-all active:scale-95 shadow-sm"
@@ -781,18 +946,35 @@ export default function EnhancedOfficialDashboard() {
 
                                         {modalTab === 'detail' ? (
                                             <>
-                                                {!selectedComplaint.isActionable && (
-                                                    <div className="mb-6 p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3 items-start animate-in fade-in slide-in-from-top-4 duration-500">
-                                                        <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                                                        <div>
-                                                            <h4 className="text-[12px] font-bold text-amber-900 leading-tight">Monitoring Mode Only</h4>
-                                                            <p className="text-[11px] text-amber-700 mt-1 leading-relaxed">
-                                                                This grievance is currently under **{selectedComplaint.assignedToLevel} Jurisdiction**. 
-                                                                As a {user?.role.split('_')[1]} official, you can monitor the details, but direct action is managed by the {selectedComplaint.assignedToLevel} team unless it escalates.
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                )}
+                                                {(() => {
+                                                    const roleLevelMap: Record<string, string> = {
+                                                        'official_block': 'Local',
+                                                        'official_district': 'District',
+                                                        'official_state': 'State'
+                                                    };
+                                                    
+                                                    // Force actionable if role matches assigned level (Frontend fallback)
+                                                    if (!selectedComplaint.isActionable && 
+                                                        (user.role === 'admin' || user.role === 'official_super' || roleLevelMap[user.role] === selectedComplaint.assignedToLevel)) {
+                                                        selectedComplaint.isActionable = true;
+                                                    }
+
+                                                    if (!selectedComplaint.isActionable) {
+                                                        return (
+                                                            <div className="mb-6 p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3 items-start animate-in fade-in slide-in-from-top-4 duration-500">
+                                                                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                                                                <div>
+                                                                    <h4 className="text-[12px] font-bold text-amber-900 leading-tight">Monitoring Mode Only</h4>
+                                                                    <p className="text-[11px] text-amber-700 mt-1 leading-relaxed">
+                                                                        This grievance is currently under **{selectedComplaint.assignedToLevel} Jurisdiction**. 
+                                                                        As a {user?.role.split('_')[1]} official, you can monitor the details, but direct action is reserved for officers at that level unless it is escalated to you.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })()}
 
                                                 <div>
                                                     <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Citizen Context</h4>

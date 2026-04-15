@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { UserPlus, Phone, Lock, User } from 'lucide-react';
 import Link from 'next/link';
+import API_ROUTES from '@/lib/apiConfig';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -36,7 +37,7 @@ export default function RegisterPage() {
 
     // Fetch initial districts on load
     useEffect(() => {
-        axios.get('http://localhost:5000/api/users/locations/districts')
+        axios.get(API_ROUTES.DISTRICTS)
             .then(res => setDistricts(res.data))
             .catch(err => console.error(err));
     }, []);
@@ -53,7 +54,7 @@ export default function RegisterPage() {
             if (value) {
                 try {
                     setLoading(true);
-                    const res = await axios.get(`http://localhost:5000/api/users/locations/blocks/${value}`);
+                    const res = await axios.get(API_ROUTES.BLOCKS(value));
                     console.log(`[BLOCKS_FETCHED] for ${value}:`, res.data);
                     setBlocks(res.data);
                 } catch (err) {
@@ -68,8 +69,7 @@ export default function RegisterPage() {
             if (value) {
                 try {
                     setLoading(true);
-                    // Use 'formData.district' carefully - or better, the value of district from the form state
-                    const res = await axios.get(`http://localhost:5000/api/users/locations/villages/${formData.district}/${value}`);
+                    const res = await axios.get(API_ROUTES.VILLAGES(formData.district, value));
                     console.log(`[VILLAGES_FETCHED] for ${formData.district}/${value}:`, res.data);
                     setVillages(res.data);
                 } catch (err) {
@@ -109,7 +109,7 @@ export default function RegisterPage() {
         setMessage({ text: '', type: '' });
 
         try {
-            await axios.post('http://localhost:5000/api/users/register', formData);
+            await axios.post(API_ROUTES.REGISTER, formData);
 
             setMessage({ text: 'Registration successful! Redirecting to login...', type: 'success' });
 

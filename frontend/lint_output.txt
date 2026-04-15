@@ -1,0 +1,81 @@
+
+> frontend@0.1.0 lint
+> eslint
+
+
+/Users/muditkumar/Desktop/jan setu/frontend/src/app/analytics/page.tsx
+   7:39  warning  'CartesianGrid' is defined but never used  @typescript-eslint/no-unused-vars
+   8:27  warning  'Users' is defined but never used          @typescript-eslint/no-unused-vars
+  17:40  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+/Users/muditkumar/Desktop/jan setu/frontend/src/app/dashboard/citizen/page.tsx
+    6:191  warning  'Mail' is defined but never used                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  101:8    warning  React Hook useEffect has missing dependencies: 'fetchComplaints' and 'router'. Either include them or remove the dependency array                                                                                                                                                        react-hooks/exhaustive-deps
+  108:8    warning  React Hook useEffect has a missing dependency: 'formData.latitude'. Either include it or remove the dependency array                                                                                                                                                                     react-hooks/exhaustive-deps
+  361:86   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  497:69   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  512:69   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  589:57   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  607:161  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  702:53   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  752:54   warning  'e' is defined but never used                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  984:29   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/muditkumar/Desktop/jan setu/frontend/src/app/dashboard/official/page.tsx
+    19:5   warning  'Calendar' is defined but never used                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+    20:5   warning  'ArrowUpRight' is defined but never used                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+    21:5   warning  'CheckCircle' is defined but never used                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+    23:5   warning  'ListFilter' is defined but never used                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+    25:5   warning  'Globe' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+    29:5   warning  'CheckCircle2' is defined but never used                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+    30:14  warning  'ImageIcon' is defined but never used                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   105:12  warning  'escalations' is assigned a value but never used                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   156:8   warning  React Hook useEffect has missing dependencies: 'fetchAllData' and 'router'. Either include them or remove the dependency array                                                                                                                                                           react-hooks/exhaustive-deps
+   270:18  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   289:18  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   579:77  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+   835:61  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  1003:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/muditkumar/Desktop/jan setu/frontend/src/app/register/page.tsx
+    6:10  warning  'ShieldCheck' is defined but never used       @typescript-eslint/no-unused-vars
+    6:52  warning  'MapPin' is defined but never used            @typescript-eslint/no-unused-vars
+    6:60  warning  'KeyRound' is defined but never used          @typescript-eslint/no-unused-vars
+   13:12  warning  'step' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   13:18  warning  'setStep' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   36:12  warning  'otp' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   36:17  warning  'setOtp' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  113:21  warning  'data' is assigned a value but never used     @typescript-eslint/no-unused-vars
+
+/Users/muditkumar/Desktop/jan setu/frontend/src/components/AnalyticsDashboard.tsx
+  17:72  warning  'priorityData' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/muditkumar/Desktop/jan setu/frontend/src/components/GovTopBar.tsx
+  8:13  warning  't' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/muditkumar/Desktop/jan setu/frontend/src/components/GrievanceHeatmap.tsx
+  6:35  warning  'Layers' is defined but never used  @typescript-eslint/no-unused-vars
+  6:43  warning  'Filter' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/muditkumar/Desktop/jan setu/frontend/src/components/Leaderboard.tsx
+  5:18  warning  'TrendingUp' is defined but never used    @typescript-eslint/no-unused-vars
+  5:30  warning  'TrendingDown' is defined but never used  @typescript-eslint/no-unused-vars
+  5:44  warning  'Target' is defined but never used        @typescript-eslint/no-unused-vars
+
+/Users/muditkumar/Desktop/jan setu/frontend/src/components/OfficialDirectory.tsx
+   6:16  warning  'UserMinus' is defined but never used    @typescript-eslint/no-unused-vars
+   6:35  warning  'ShieldAlert' is defined but never used  @typescript-eslint/no-unused-vars
+   7:57  warning  'Lock' is defined but never used         @typescript-eslint/no-unused-vars
+   7:63  warning  'ChevronDown' is defined but never used  @typescript-eslint/no-unused-vars
+  63:18  warning  'error' is defined but never used        @typescript-eslint/no-unused-vars
+  83:18  warning  'error' is defined but never used        @typescript-eslint/no-unused-vars
+
+/Users/muditkumar/Desktop/jan setu/frontend/src/components/dashboard/WeeklyChart.tsx
+  2:32  warning  'YAxis' is defined but never used          @typescript-eslint/no-unused-vars
+  2:39  warning  'CartesianGrid' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/muditkumar/Desktop/jan setu/frontend/tests/full-journey.spec.ts
+  8:56  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 52 problems (3 errors, 49 warnings)
+

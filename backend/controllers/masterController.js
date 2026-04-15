@@ -139,32 +139,70 @@ export const getHeatmapData = async (req, res) => {
 };
 
 // @desc    Public Performance & Satisfaction Stats
-// @route   GET /api/master/public/stats
+// @route   GET /api/master/public/stats?district=Lucknow (optional district filter)
 // @access  Public
 export const getPublicStats = async (req, res) => {
     try {
-        const totalGrievances = await Complaint.countDocuments();
-        const resolvedGrievances = await Complaint.countDocuments({ status: { $in: ["Resolved", "Closed Permanently"] } });
-        const pendingGrievances = await Complaint.countDocuments({ status: { $in: ["Pending Assignment", "In Progress"] } });
-        
-        // Avg Resolution Time (Mock based on SLA logic if not recorded)
-        const avgResolutionTime = "38.5 Hours"; 
+        // Optional district filter from query param
+        const districtFilter = req.query.district ? { district: req.query.district } : {};
+
+        const totalGrievances = await Complaint.countDocuments(districtFilter);
+        const resolvedGrievances = await Complaint.countDocuments({ ...districtFilter, status: { $in: ["Resolved", "Closed Permanently"] } });
+        const pendingGrievances = await Complaint.countDocuments({ ...districtFilter, status: { $in: ["Pending", "Pending Assignment", "In Progress"] } });
+
+        // Average resolution time in hours (real calculation)
+        const resolvedWithDates = await Complaint.find({
+            ...districtFilter,
+            status: { $in: ['Resolved', 'Closed Permanently'] },
+            updatedAt: { $exists: true },
+            createdAt: { $exists: true }
+        }).select('createdAt updatedAt').lean();
+
+        let avgHours = 38.5; // fallback
+        if (resolvedWithDates.length > 0) {
+            const totalMs = resolvedWithDates.reduce((acc, c) =>
+                acc + (new Date(c.updatedAt) - new Date(c.createdAt)), 0);
+            avgHours = parseFloat((totalMs / resolvedWithDates.length / 3600000).toFixed(1));
+        }
 
         // Satisfaction from ATRs
-        const complaintsWithATR = await Complaint.find({ "citizenATR.satisfactionLevel": { $exists: true } });
-        const satisfiedCount = complaintsWithATR.filter(c => c.citizenATR.satisfactionLevel === 'Satisfied').length;
-        const publicSatisfaction = complaintsWithATR.length > 0 
-            ? Math.round((satisfiedCount / complaintsWithATR.length) * 100) 
-            : 85; // Default mock for demo
+        const complaintsWithATR = await Complaint.find({ ...districtFilter, 'citizenATR.satisfied': { $exists: true } });
+        const satisfiedCount = complaintsWithATR.filter(c => c.citizenATR?.satisfied === true).length;
+        const publicSatisfaction = complaintsWithATR.length > 0
+            ? Math.round((satisfiedCount / complaintsWithATR.length) * 100)
+            : 85;
+
+        // Apply demo offset only when not district-filtered
+        const offset = req.query.district ? 0 : 12543;
+        const resolvedOffset = req.query.district ? 0 : 11200;
+        const pendingOffset = req.query.district ? 0 : 1343;
 
         res.json({
-            total: totalGrievances + 12543, // Mock offset for large scale feel
-            resolved: resolvedGrievances + 11200,
-            pending: pendingGrievances + 1343,
-            avgResolutionTime,
-            publicSatisfaction: `${publicSatisfaction}%`
+            total: totalGrievances + offset,
+            resolved: resolvedGrievances + resolvedOffset,
+            pending: pendingGrievances + pendingOffset,
+            avgResolutionTime: `${avgHours} Hours`,
+            publicSatisfaction: `${publicSatisfaction}%`,
+            districtFilter: req.query.district || null
         });
     } catch (error) {
         res.status(500).json({ message: 'Public stats retrieval failed' });
+    }
+};
+
+// @desc    Public Recent Complaints Feed (Anonymized — no citizen PII)
+// @route   GET /api/master/public/recent
+// @access  Public
+export const getPublicRecentComplaints = async (req, res) => {
+    try {
+        const complaints = await Complaint.find({})
+            .select('title department status priority district block assignedToLevel createdAt')
+            .sort({ createdAt: -1 })
+            .limit(12)
+            .lean();
+
+        res.json(complaints);
+    } catch (error) {
+        res.status(500).json({ message: 'Recent complaints retrieval failed' });
     }
 };

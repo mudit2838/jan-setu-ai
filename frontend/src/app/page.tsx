@@ -1,7 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import axios from 'axios';
 import { motion, Variants } from 'framer-motion';
+import API_ROUTES from '@/lib/apiConfig';
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -17,6 +20,30 @@ const staggerContainer: Variants = {
 };
 
 export default function Home() {
+  const [liveStats, setLiveStats] = useState({
+    total: '10k+',
+    avgResolution: '48 Hrs',
+    satisfaction: '85%',
+    districts: '75'
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { data } = await axios.get(API_ROUTES.PUBLIC_STATS);
+        setLiveStats({
+          total: data.total.toLocaleString() + '+',
+          avgResolution: data.avgResolutionTime,
+          satisfaction: data.publicSatisfaction,
+          districts: '75'
+        });
+      } catch (error) {
+        console.error("Failed to fetch landing stats", error);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-orange-200">
       {/* HEADER NAVBAR */}
@@ -33,6 +60,10 @@ export default function Home() {
           <nav className="hidden md:flex gap-8 font-semibold text-slate-600">
             <Link href="/about" className="hover:text-orange-600 transition-colors">About</Link>
             <Link href="/features" className="hover:text-green-600 transition-colors">Features</Link>
+            <Link href="/analytics" className="hover:text-orange-600 transition-colors flex items-center gap-1.5">
+              Analytics
+              <span className="bg-orange-100 text-orange-600 text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-tighter">Live</span>
+            </Link>
             <Link href="/how-it-works" className="hover:text-blue-600 transition-colors">How It Works</Link>
           </nav>
           <div className="flex items-center gap-4">
@@ -96,10 +127,10 @@ export default function Home() {
           {/* Quick Stats Banner - Glassmorphism */}
           <motion.div variants={staggerContainer} className="mt-24 grid grid-cols-2 lg:grid-cols-4 gap-6 w-full">
             {[
-              { label: 'Departments', value: '15+' },
-              { label: 'Avg Resolution', value: '48 Hrs' },
-              { label: 'Active Users', value: '10k+' },
-              { label: 'Districts Live', value: '75' }
+              { label: 'Total Grievances', value: liveStats.total },
+              { label: 'Avg Resolution', value: liveStats.avgResolution },
+              { label: 'Public Satisfaction', value: liveStats.satisfaction },
+              { label: 'Districts Live', value: liveStats.districts }
             ].map((stat, idx) => (
               <motion.div key={idx} variants={fadeUp} className="bg-white/40 backdrop-blur-xl border border-white/60 p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all group cursor-default">
                 <div className="text-4xl font-black text-slate-900 bg-gradient-to-br from-slate-900 to-slate-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform origin-left">{stat.value}</div>
@@ -134,10 +165,10 @@ export default function Home() {
           {/* Policies */}
           <div className="flex flex-col gap-3">
             <h3 className="text-white font-bold uppercase tracking-wider mb-2">Policies</h3>
-            <Link href="#" className="hover:text-orange-400 transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-orange-400 transition-colors">Terms of Use</Link>
-            <Link href="#" className="hover:text-orange-400 transition-colors">Copyright Policy</Link>
-            <Link href="#" className="hover:text-orange-400 transition-colors">Accessibility Statement</Link>
+            <Link href="/privacy" className="hover:text-orange-400 transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-orange-400 transition-colors">Terms of Use</Link>
+            <Link href="/copyright" className="hover:text-orange-400 transition-colors">Copyright Policy</Link>
+            <Link href="/accessibility" className="hover:text-orange-400 transition-colors">Accessibility Statement</Link>
           </div>
 
           {/* National Portals */}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Trophy, TrendingUp, TrendingDown, Target, Loader2, Award, Zap, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import API_ROUTES from '@/lib/apiConfig';
 
 interface DepartmentStat {
     department: string;
@@ -18,7 +19,7 @@ export default function Leaderboard() {
     const fetchLeaderboard = async () => {
         try {
             const token = localStorage.getItem('token');
-            const { data } = await axios.get('http://localhost:5000/api/master/leaderboard', {
+            const { data } = await axios.get(API_ROUTES.LEADERBOARD, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setStats(data);

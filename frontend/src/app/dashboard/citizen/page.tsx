@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import SkeletonCard from '@/components/SkeletonCard';
+import API_ROUTES from '@/lib/apiConfig';
 
 const MapDisplay = dynamic(() => import('@/components/MapDisplay'), {
     ssr: false,
@@ -47,6 +48,58 @@ interface ComplaintData {
     escalationHistory?: Escalation[];
 }
 
+// --- HELPER COMPONENT: REAL-TIME COUNTDOWN ---
+const TimeRemaining = ({ targetDate, status }: { targetDate: string, status: string }) => {
+    const [timeLeft, setTimeLeft] = useState("");
+    const [isOverdue, setIsOverdue] = useState(false);
+
+    useEffect(() => {
+        const calculateTime = () => {
+            const now = new Date().getTime();
+            const deadline = new Date(targetDate).getTime();
+            const diff = deadline - now;
+
+            if (status === 'Resolved' || status === 'Closed Permanently') {
+                setTimeLeft("Terminated");
+                return;
+            }
+
+            if (diff <= 0) {
+                setIsOverdue(true);
+                const absDiff = Math.abs(diff);
+                const hours = Math.floor(absDiff / (1000 * 60 * 60));
+                const mins = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
+                setTimeLeft(`${hours}h ${mins}m overdue`);
+            } else {
+                setIsOverdue(false);
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                
+                if (days > 0) setTimeLeft(`${days}d ${hours}h left`);
+                else if (hours > 0) setTimeLeft(`${hours}h ${mins}m left`);
+                else setTimeLeft(`${mins}m left`);
+            }
+        };
+
+        calculateTime();
+        const interval = setInterval(calculateTime, 60000); // Update every minute
+        return () => clearInterval(interval);
+    }, [targetDate, status]);
+
+    if (status === 'Resolved' || status === 'Closed Permanently') return null;
+
+    return (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ml-3 border shadow-sm ${
+            isOverdue 
+                ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse' 
+                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            }`}>
+            <Clock className={`w-3 h-3 ${isOverdue ? 'text-rose-500' : 'text-emerald-500'}`} /> {timeLeft}
+        </span>
+    );
+};
+
 export default function CitizenDashboard() {
     const router = useRouter();
     const { t, language, toggleLanguage } = useLanguage();
@@ -54,6 +107,12 @@ export default function CitizenDashboard() {
     const [accountSubTab, setAccountSubTab] = useState('profile'); // 'profile' | 'security' | 'activity'
     const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
     const [viewImageUrl, setViewImageUrl] = useState<string | null>(null);
+
+    // Helper to get full image URL (supports Cloudinary full URLs and local paths)
+    const getFullImageUrl = (url?: string) => {
+        if (!url) return '';
+        return API_ROUTES.UPLOADS(url);
+    };
     const [user, setUser] = useState<CitizenData | null>(null);
 
     // Complaint List State
@@ -98,7 +157,7 @@ export default function CitizenDashboard() {
             setUser(JSON.parse(userData));
             fetchComplaints();
             // Fetch initial districts for form
-            axios.get('http://localhost:5000/api/users/locations/districts')
+            axios.get(API_ROUTES.DISTRICTS)
                 .then(res => setDistricts(res.data)).catch(err => console.error(err));
         }
     }, []);
@@ -113,7 +172,7 @@ export default function CitizenDashboard() {
     const fetchComplaints = async () => {
         setLoadingList(true);
         try {
-            const { data } = await axios.get('http://localhost:5000/api/complaints/my', {
+            const { data } = await axios.get(API_ROUTES.MY_COMPLAINTS, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
             setComplaints(data);
@@ -131,7 +190,7 @@ export default function CitizenDashboard() {
     const downloadReceipt = async (id: string, trackingId: string) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`http://localhost:5000/api/complaints/${id}/pdf`, {
+            const response = await axios.get(`${API_ROUTES.COMPLAINTS}/${id}/pdf`, {
                 headers: { Authorization: `Bearer ${token}` },
                 responseType: 'blob'
             });
@@ -207,14 +266,14 @@ export default function CitizenDashboard() {
             setFormData(prev => ({ ...prev, block: '', village: '' }));
             setBlocks([]); setVillages([]);
             if (value) {
-                const res = await axios.get(`http://localhost:5000/api/users/locations/blocks/${value}`);
+                const res = await axios.get(API_ROUTES.BLOCKS(value));
                 setBlocks(res.data);
             }
         } else if (type === 'block') {
             setFormData(prev => ({ ...prev, village: '' }));
             setVillages([]);
             if (value) {
-                const res = await axios.get(`http://localhost:5000/api/users/locations/villages/${formData.district}/${value}`);
+                const res = await axios.get(API_ROUTES.VILLAGES(formData.district, value));
                 setVillages(res.data);
             }
         }
@@ -230,7 +289,7 @@ export default function CitizenDashboard() {
         setFormLoading(true);
 
         try {
-            await axios.post('http://localhost:5000/api/complaints', formData, {
+            await axios.post(API_ROUTES.COMPLAINTS, formData, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             });
 
@@ -265,13 +324,13 @@ export default function CitizenDashboard() {
 
         try {
             const token = localStorage.getItem('token');
-            const { data } = await axios.post('http://localhost:5000/api/upload', uploadData, {
+            const { data } = await axios.post(API_ROUTES.UPLOAD, uploadData, {
                 headers: { 
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${token}`
                 }
             });
-            // data.url returns the s3 link or the local path
+            // data.url returns the Cloudinary URL or the local path
             setFormData(prev => ({ ...prev, issueImage: data.url }));
             setImagePreview(URL.createObjectURL(file));
             toast.success('Evidence photo uploaded successfully.');
@@ -397,7 +456,14 @@ export default function CitizenDashboard() {
                                                 <div className="flex-1"><strong>Level:</strong> {c.assignedToLevel} Official</div>
                                                 {c.slaDueDate && (
                                                     <div className="flex-1 text-right">
-                                                        <strong>Deadline:</strong> {new Date(c.slaDueDate).toLocaleDateString()}
+                                                        <div className="flex flex-col items-end">
+                                                            <div className="flex items-center">
+                                                                <strong className="text-slate-900">Deadline:</strong>
+                                                                <span className="ml-1.5 text-slate-600 font-medium">{new Date(c.slaDueDate).toLocaleDateString()}</span>
+                                                                <TimeRemaining targetDate={c.slaDueDate} status={c.status} />
+                                                            </div>
+                                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.1em] mt-1">Grievance SLA Compliance Window</span>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
@@ -494,10 +560,10 @@ export default function CitizenDashboard() {
                                                             <div className="flex-1 min-w-[140px] max-w-[200px]">
                                                                 <div className="text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Originally Reported</div>
                                                                 <div 
-                                                                    onClick={() => setViewImageUrl(`http://localhost:5000${c.issueImage}`)}
+                                                                    onClick={() => setViewImageUrl(getFullImageUrl(c.issueImage))}
                                                                     className="relative group rounded-xl overflow-hidden border border-slate-200 cursor-zoom-in"
                                                                 >
-                                                                    <img src={`http://localhost:5000${c.issueImage}`} alt="Before" className="h-28 w-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                                    <img src={getFullImageUrl(c.issueImage)} alt="Before" className="h-28 w-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                                                     <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-slate-900/30 transition-colors flex items-center justify-center">
                                                                         <Search className="text-white opacity-0 group-hover:opacity-100 w-5 h-5" />
                                                                     </div>
@@ -509,10 +575,10 @@ export default function CitizenDashboard() {
                                                             <div className="flex-1 min-w-[140px] max-w-[200px]">
                                                                 <div className="text-[10px] font-bold text-green-600 mb-1.5 uppercase">Official Resolution Proof</div>
                                                                 <div 
-                                                                    onClick={() => setViewImageUrl(`http://localhost:5000${c.proofImage}`)}
+                                                                    onClick={() => setViewImageUrl(getFullImageUrl(c.proofImage))}
                                                                     className="relative group rounded-xl overflow-hidden border-2 border-green-200 shadow-sm shadow-green-100 cursor-zoom-in"
                                                                 >
-                                                                    <img src={`http://localhost:5000${c.proofImage}`} alt="After" className="h-28 w-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                                    <img src={getFullImageUrl(c.proofImage)} alt="After" className="h-28 w-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                                                     <div className="absolute inset-0 bg-green-500/10 group-hover:bg-green-500/30 transition-colors flex items-center justify-center">
                                                                         <Search className="text-white opacity-0 group-hover:opacity-100 w-5 h-5" />
                                                                     </div>
@@ -701,8 +767,8 @@ export default function CitizenDashboard() {
                                         {selectedComplaint.proofImage && (
                                             <div className="mt-4 pt-4 border-t border-green-200">
                                                 <h4 className="text-xs font-semibold text-green-700 uppercase tracking-widest mb-2">Resolution Proof</h4>
-                                                <a href={`http://localhost:5000${selectedComplaint.proofImage}`} target="_blank" rel="noreferrer">
-                                                    <img src={`http://localhost:5000${selectedComplaint.proofImage}`} alt="Resolution Proof" className="h-40 w-auto object-cover rounded-lg border border-green-200 shadow-sm hover:opacity-90 transition-opacity cursor-pointer" />
+                                                <a href={getFullImageUrl(selectedComplaint.proofImage)} target="_blank" rel="noreferrer">
+                                                    <img src={getFullImageUrl(selectedComplaint.proofImage)} alt="Resolution Proof" className="h-40 w-auto object-cover rounded-lg border border-green-200 shadow-sm hover:opacity-90 transition-opacity cursor-pointer" />
                                                 </a>
                                             </div>
                                         )}
@@ -745,7 +811,7 @@ export default function CitizenDashboard() {
                                         onClick={async () => {
                                             setFeedbackLoading(true);
                                             try {
-                                                await axios.post(`http://localhost:5000/api/complaints/${selectedComplaint._id}/feedback`, feedbackData, {
+                                                await axios.post(`${API_ROUTES.COMPLAINTS}/${selectedComplaint._id}/feedback`, feedbackData, {
                                                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                                                 });
                                                 alert('Feedback submitted successfully!');

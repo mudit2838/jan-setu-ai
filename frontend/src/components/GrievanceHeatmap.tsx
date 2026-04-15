@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
 import { Loader2, Map as MapIcon, Layers, Filter } from 'lucide-react';
 import axios from 'axios';
+import API_ROUTES from '@/lib/apiConfig';
 
 // Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -41,7 +42,7 @@ export default function GrievanceHeatmap() {
         const fetchHeatmap = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const { data } = await axios.get('http://localhost:5000/api/master/heatmap', {
+                const { data } = await axios.get(API_ROUTES.HEATMAP, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setPoints(data);

@@ -1,6 +1,7 @@
 import Complaint from '../models/complaintModel.js';
 import Feedback from '../models/feedbackModel.js';
 import { sendNotification } from '../services/notificationService.js';
+import { broadcast } from '../services/sseManager.js';
 import User from '../models/userModel.js'; // Needed to fetch citizen data for notifications if populate is not available
 
 // @desc    Update Complaint Status (Officer)
@@ -41,6 +42,15 @@ export const updateComplaintStatus = async (req, res) => {
         }
 
         const updatedComplaint = await complaint.save();
+
+        // Broadcast real-time update to all connected official dashboards
+        broadcast('STATUS_UPDATE', {
+            id: updatedComplaint._id,
+            shortId: updatedComplaint._id.toString().slice(-6).toUpperCase(),
+            status,
+            department: updatedComplaint.department,
+            district: updatedComplaint.district
+        });
 
         res.json({
             message: `Complaint marked as ${status}`,
@@ -126,6 +136,16 @@ export const submitFeedback = async (req, res) => {
         }
 
         await complaint.save();
+
+        // Broadcast escalation event to all connected official dashboards
+        if (complaint.status === 'Escalated - Pending Action') {
+            broadcast('ESCALATION', {
+                id: complaint._id,
+                shortId: complaint._id.toString().slice(-6).toUpperCase(),
+                newLevel: complaint.assignedToLevel,
+                district: complaint.district
+            });
+        }
 
         res.status(201).json({
             message: 'Feedback submitted and workflow updated successfully',

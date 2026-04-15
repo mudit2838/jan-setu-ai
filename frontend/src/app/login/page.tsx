@@ -7,6 +7,7 @@ import { ShieldCheck, Phone, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
+import API_ROUTES from '@/lib/apiConfig';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -41,8 +42,8 @@ export default function LoginPage() {
                 payload.password = password;
             }
 
-            const endpoint = isAdminMode ? '/api/users/login/official' : '/api/users/login/citizen';
-            const { data } = await axios.post(`http://localhost:5000${endpoint}`, payload);
+            const endpoint = isAdminMode ? API_ROUTES.LOGIN + '/official' : API_ROUTES.LOGIN + '/citizen';
+            const { data } = await axios.post(endpoint, payload);
 
             // Save token
             localStorage.setItem('token', data.token);
@@ -82,7 +83,7 @@ export default function LoginPage() {
                 <div className="bg-slate-900 px-6 py-8 text-center text-white relative overflow-hidden">
                     <div className="absolute opacity-10 right-[-20%] top-[-20%] w-48 h-48 bg-white rounded-full blur-3xl"></div>
                     <ShieldCheck className="w-12 h-12 mx-auto mb-3 text-orange-400" />
-                    <h2 className="text-2xl font-bold">Bharat JanSetu</h2>
+                    <h2 className="text-2xl font-bold m-0">Bharat JanSetu AI</h2>
                     <p className="text-slate-300 text-sm mt-1">Secure Authentication Gateway</p>
                 </div>
 

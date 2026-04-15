@@ -7,6 +7,7 @@ import {
     Building, Phone, Mail, Loader2, Power, UserPlus, X, Lock, ChevronDown
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import API_ROUTES from '@/lib/apiConfig';
 
 interface Official {
     _id: string;
@@ -44,7 +45,7 @@ export default function OfficialDirectory() {
     const fetchOfficials = async () => {
         try {
             const token = localStorage.getItem('token');
-            const { data } = await axios.get('http://localhost:5000/api/master/officials', {
+            const { data } = await axios.get(API_ROUTES.OFFICIALS, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setOfficials(data);
@@ -58,7 +59,7 @@ export default function OfficialDirectory() {
 
     const fetchLocations = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/users/locations/districts');
+            const { data } = await axios.get(API_ROUTES.DISTRICTS);
             setDistricts(data);
         } catch (error) {
             console.error('Failed to fetch districts');
@@ -74,7 +75,7 @@ export default function OfficialDirectory() {
         setActionId(id);
         try {
             const token = localStorage.getItem('token');
-            const { data } = await axios.patch(`http://localhost:5000/api/master/official/${id}/toggle`, {}, {
+            const { data } = await axios.patch(`${API_ROUTES.OFFICIALS}/${id}/toggle`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
@@ -92,7 +93,7 @@ export default function OfficialDirectory() {
         setRegisterLoading(true);
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/master/register', formData, {
+            await axios.post(API_ROUTES.REGISTER, formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             

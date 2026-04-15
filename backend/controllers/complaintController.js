@@ -1,6 +1,7 @@
 import Complaint from '../models/complaintModel.js';
 import axios from 'axios';
 import { sendNotification } from '../services/notificationService.js';
+import { broadcast } from '../services/sseManager.js';
 
 // Helper to determine initial deadline (Local Level)
 const calculateInitialDeadline = (priority) => {
@@ -92,6 +93,16 @@ export const submitComplaint = async (req, res) => {
             complaint
         });
 
+        // Broadcast real-time update to all connected official dashboards
+        broadcast('NEW_COMPLAINT', {
+            id: complaint._id,
+            shortId: complaint._id.toString().slice(-6).toUpperCase(),
+            title: complaint.title,
+            department: complaint.department,
+            priority: complaint.priority,
+            district: complaint.district
+        });
+
         // 4. Send Confirmation Notification (Async - do not block response)
         const message = `Bharat JanSetu: Your complaint #${complaint._id.toString().slice(-6).toUpperCase()} has been filed and routed to the ${complaint.assignedToLevel} level for ${complaint.department} department. Track it on the portal.`;
         sendNotification(req.user.mobile, req.user.email, message);
@@ -121,22 +132,29 @@ export const getAdminComplaints = async (req, res) => {
         const { role, district, block, department } = req.user;
         let matchQuery = { department }; 
 
-        // Mapping role to jurisdictional target level
+        // Mapping role to jurisdictional target level and visibility scope
         let targetLevel = 'Local';
-        if (role === 'official_block') {
-            matchQuery.district = district;
-            matchQuery.block = block;
-            targetLevel = 'Local';
-        } else if (role === 'official_district') {
-            matchQuery.district = district;
-            targetLevel = 'District';
-        } else if (role === 'official_state') {
-            targetLevel = 'State';
-        } else if (role === 'admin') {
-            matchQuery = {};
+        
+        if (role === 'admin' || role === 'official_super') {
+            matchQuery = {}; // Global visibility for master admins
             targetLevel = 'Any';
         } else {
-            return res.status(403).json({ message: 'Unauthorized role for this dashboard.' });
+            // All other official roles are strictly siloed by their current assignment level
+            if (role === 'official_block') {
+                matchQuery.district = district;
+                matchQuery.block = block;
+                matchQuery.assignedToLevel = 'Local';
+                targetLevel = 'Local';
+            } else if (role === 'official_district') {
+                matchQuery.district = district;
+                matchQuery.assignedToLevel = 'District';
+                targetLevel = 'District';
+            } else if (role === 'official_state') {
+                matchQuery.assignedToLevel = 'State';
+                targetLevel = 'State';
+            } else {
+                return res.status(403).json({ message: 'Unauthorized role for this dashboard.' });
+            }
         }
 
         // Use Aggregation to calculate 'isActionable' flag and optimized sorting
@@ -176,15 +194,21 @@ export const getAdminAnalytics = async (req, res) => {
         const { role, district, block, department } = req.user;
         let filter = { department };
 
-        if (role === 'official_block') {
-            filter.district = district;
-            filter.block = block;
-        } else if (role === 'official_district') {
-            filter.district = district;
-        } else if (role === 'official_state') {
-            // Scoped by department
-        } else if (role === 'admin') {
+        if (role === 'admin' || role === 'official_super') {
             filter = {};
+        } else {
+            if (role === 'official_block') {
+                filter.district = district;
+                filter.block = block;
+                filter.assignedToLevel = 'Local';
+            } else if (role === 'official_district') {
+                filter.district = district;
+                filter.assignedToLevel = 'District';
+            } else if (role === 'official_state') {
+                filter.assignedToLevel = 'State';
+            } else {
+                return res.status(403).json({ message: 'Unauthorized role' });
+            }
         }
 
         // 1. Status Breakdown
@@ -262,28 +286,46 @@ export const getAdminAnalytics = async (req, res) => {
     }
 };
 
-// @desc    Get 3 most recent complaints
+// @desc    Get 3 most recent complaints with jurisdiction flags
 // @route   GET /api/complaints/recent
 export const getRecentComplaints = async (req, res) => {
     try {
         const { role, district, block, department } = req.user;
         let query = { department };
+        let targetLevel = 'Local';
 
-        if (role === 'official_block') {
-            query.district = district;
-            query.block = block;
-        } else if (role === 'official_district') {
-            query.district = district;
-        } else if (role === 'admin') {
+        if (role === 'admin' || role === 'official_super') {
             query = {};
+            targetLevel = 'Any';
+        } else {
+            if (role === 'official_block') {
+                query.district = district;
+                query.block = block;
+                query.assignedToLevel = 'Local';
+                targetLevel = 'Local';
+            } else if (role === 'official_district') {
+                query.district = district;
+                query.assignedToLevel = 'District';
+                targetLevel = 'District';
+            } else if (role === 'official_state') {
+                query.assignedToLevel = 'State';
+                targetLevel = 'State';
+            }
         }
 
-        const complaints = await Complaint.find(query)
-            .sort({ createdAt: -1 })
-            .limit(3)
-            .populate('citizen', 'name');
+        const complaints = await Complaint.aggregate([
+            { $match: query },
+            { $sort: { createdAt: -1 } },
+            { $limit: parseInt(req.query.limit) || 3 },
+            {
+                $addFields: {
+                    isActionable: { $eq: ["$assignedToLevel", targetLevel] }
+                }
+            }
+        ]);
 
-        res.json(complaints);
+        const populatedComplaints = await Complaint.populate(complaints, { path: 'citizen', select: 'name mobile' });
+        res.json(populatedComplaints);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching recent complaints', error: error.message });
     }
