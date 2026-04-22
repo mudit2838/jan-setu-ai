@@ -24,8 +24,9 @@ RUN python -m spacy download en_core_web_md
 # Copy the rest of the application
 COPY . .
 
-# Expose the FastAPI default port
+# Expose the port used by the service (Synced with Docker Compose)
 EXPOSE 8000
 
-# Run the application using Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use shell form to allow environment variable expansion for the port
+# Defaults to 8000 for local development but respects $PORT (e.g., 7860 on Hugging Face)
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}

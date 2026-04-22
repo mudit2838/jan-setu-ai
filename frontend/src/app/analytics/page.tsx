@@ -120,29 +120,7 @@ export default function PublicAnalytics() {
     return (
         <div className="min-h-screen bg-slate-50 selection:bg-blue-100 font-sans">
             {/* Header */}
-            <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
-                <div className="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Link href="/" className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
-                            <ArrowLeft className="w-6 h-6" />
-                        </Link>
-                        <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
-                        <div className="flex items-center gap-2 text-xl font-black bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
-                            Bharat JanSetu <span className="text-slate-900 ml-1 uppercase text-[10px] font-black tracking-widest bg-slate-100 px-2 py-1 rounded inline-block">Public Transparency</span>
-                        </div>
-                    </div>
 
-                    <div className="flex items-center gap-6">
-                        <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-full">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
-                                Auto-refresh in {countdown}s
-                            </span>
-                        </div>
-                        <Link href="/login" className="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 transition active:scale-95 shadow-lg shadow-slate-900/20">Official Login</Link>
-                    </div>
-                </div>
-            </header>
 
             <main className="max-w-[1600px] mx-auto px-6 py-10">
                 {/* Hero Section with Filter */}

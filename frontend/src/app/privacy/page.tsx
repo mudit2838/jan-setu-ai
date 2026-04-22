@@ -7,15 +7,7 @@ import { motion } from 'framer-motion';
 export default function PrivacyPolicy() {
     return (
         <div className="min-h-screen bg-white">
-            <header className="bg-slate-50 border-b border-slate-200 py-12">
-                <div className="max-w-4xl mx-auto px-6">
-                    <Link href="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors mb-6 font-semibold text-sm">
-                        <ArrowLeft className="w-4 h-4" /> Back to Home
-                    </Link>
-                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">Privacy Policy</h1>
-                    <p className="text-slate-500 font-medium">Last Updated: April 15, 2026</p>
-                </div>
-            </header>
+
 
             <main className="max-w-4xl mx-auto px-6 py-16">
                 <div className="prose prose-slate prose-lg max-w-none">

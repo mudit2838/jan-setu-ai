@@ -12,12 +12,12 @@ RUN npm install --omit=dev
 # Copy the rest of the application
 COPY . .
 
-# Set environment variables (should be overridden by docker-compose or Kubernetes secrets)
-ENV PORT 5000
+# Set environment variables (should be overridden by Cloud Run)
+ENV PORT 8080
 ENV NODE_ENV production
 
 # Expose the API port
-EXPOSE 5000
+EXPOSE 8080
 
 # Start the production server
 CMD ["npm", "start"]

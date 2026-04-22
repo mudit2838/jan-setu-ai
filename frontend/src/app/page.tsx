@@ -46,37 +46,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-orange-200">
-      {/* HEADER NAVBAR */}
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        className="fixed top-8 w-full bg-white/70 backdrop-blur-xl shadow-sm z-50 border-b border-white/50"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-2xl font-black bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent transform hover:scale-105 transition-transform cursor-pointer">
-            <span className="text-2xl drop-shadow-md">🇮🇳</span> Bharat JanSetu AI
-          </div>
-          <nav className="hidden md:flex gap-8 font-semibold text-slate-600">
-            <Link href="/about" className="hover:text-orange-600 transition-colors">About</Link>
-            <Link href="/features" className="hover:text-green-600 transition-colors">Features</Link>
-            <Link href="/analytics" className="hover:text-orange-600 transition-colors flex items-center gap-1.5">
-              Analytics
-              <span className="bg-orange-100 text-orange-600 text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-tighter">Live</span>
-            </Link>
-            <Link href="/how-it-works" className="hover:text-blue-600 transition-colors">How It Works</Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-slate-600 font-semibold hover:text-slate-900 transition-colors">Login</Link>
-            <Link href="/register" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-2.5 rounded-full font-bold shadow-lg shadow-orange-500/30 transition-all hover:scale-105 hover:shadow-orange-500/50">
-              Report Issue
-            </Link>
-          </div>
-        </div>
-      </motion.header>
+
 
       {/* HERO SECTION */}
-      <main className="pt-28 pb-16 sm:pt-40 sm:pb-24 lg:pb-32 px-4 sm:px-6 lg:px-8 text-center bg-gradient-to-b from-slate-100 to-slate-50 relative overflow-hidden">
+      <div className="pt-20 pb-16 sm:pb-24 lg:pb-32 px-4 sm:px-6 lg:px-8 text-center bg-gradient-to-b from-slate-100 to-slate-50 relative overflow-hidden">
 
         {/* Abstract Background Blobs - Animated via Framer Motion */}
         <motion.div
@@ -139,7 +112,7 @@ export default function Home() {
             ))}
           </motion.div>
         </motion.div>
-      </main>
+      </div>
 
       {/* OFFICIAL GOVERNMENT FOOTER */}
       <footer className="bg-[#1f2937] text-slate-300 py-12 px-4 sm:px-6 lg:px-8 border-t-[4px] border-orange-500 font-sans">

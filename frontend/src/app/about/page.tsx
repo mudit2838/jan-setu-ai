@@ -4,23 +4,7 @@ import { ShieldCheck, ArrowRight, HeartHandshake, Eye, Zap } from 'lucide-react'
 export default function AboutPage() {
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
-            {/* Minimal Header */}
-            <header className="bg-white border-b border-slate-200">
-                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2">
-                        <ShieldCheck className="w-8 h-8 text-orange-600" />
-                        <span className="text-xl font-bold text-slate-900 tracking-tight">Bharat <span className="text-orange-600">JanSetu</span></span>
-                    </Link>
-                    <nav className="hidden md:flex items-center gap-6">
-                        <Link href="/about" className="text-sm font-medium text-orange-600">About Us</Link>
-                        <Link href="/how-it-works" className="text-sm font-medium text-slate-600 hover:text-orange-600 transition">How it Works</Link>
-                        <Link href="/features" className="text-sm font-medium text-slate-600 hover:text-orange-600 transition">Features</Link>
-                    </nav>
-                    <div className="flex items-center gap-3">
-                        <Link href="/login" className="text-sm font-semibold text-slate-700 hover:text-orange-600 transition">Log In</Link>
-                    </div>
-                </div>
-            </header>
+
 
             {/* Hero Section */}
             <main className="flex-1">

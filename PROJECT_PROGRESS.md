@@ -18,7 +18,7 @@
 #### **Phase 2: Backend Development (Node.js/Express)**
 - [x] **Auth System**: Password-based login (Hardened) (100%)
 - [x] **Complaint API**: CRUD operations for citizen grievances (100%)
-- [x] **File Management**: S3 integration and secure upload handling (100%)
+- [x] **File Management**: Cloudinary integration and local upload fallback (100%)
 - [x] **PDF Service**: Generation of resolution reports/certificates (100%)
 - [x] **Escalation Engine**: Batched & Scalable SLA workers (100%)
 - [x] **Jurisdictional Scoping**: Scope-based routing for 75 Districts & Multi-Blocks (100%)
@@ -52,11 +52,10 @@
 
 ### **Completed Critical Items ✅**
 
-1.  **Production Hardening**: Resolved service discovery URI bugs, secured S3 via private ACLs, and batched escalation workers for concurrency.
+1.  **Production Hardening**: Resolved service discovery URI bugs, secured image uploads via Cloudinary, and batched escalation workers for concurrency.
 2.  **Multi-Tenant Scoping**: Successfully implemented strict jurisdictional and departmental isolation across all 75 districts.
 3.  **Observability & Logs**: Integrated structured JSON logging and global error handling for state-scale monitoring.
 4.  **Real-time Analytics**: Linkage fixed in the backend `getAdminAnalytics` route to ensure correct schema fields are used for aggregation.
 5.  **Submission Assets**: Created a professional `README.md`, `.env.example`, and a `DEPLOYMENT_GUIDE.md` for the user.
 
 ---
-*Last Updated: 2026-04-08 | Updated by Antigravity AI*

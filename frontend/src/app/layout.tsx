@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
 import GovTopBar from "@/components/GovTopBar";
+import Navbar from "@/components/Navbar";
 import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
@@ -63,11 +64,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  icons: {
-    icon: '/favicon.png',
-    shortcut: '/favicon.png',
-    apple: '/apple-touch-icon.png',
-  },
+
 };
 
 export default function RootLayout({
@@ -96,7 +93,8 @@ export default function RootLayout({
           />
           <div className="flex flex-col min-h-screen">
             <GovTopBar />
-            <main className="flex-1 w-full" id="main-content">
+            <Navbar />
+            <main className="flex-1 w-full pt-16" id="main-content">
               {children}
             </main>
           </div>
