@@ -29,7 +29,7 @@ export const metadata: Metadata = {
    verification: {
     google: "45zjuuFEqAVzLkzv2hGhNK-p3PWf03m60nLwnyVZsI4",
   },
-  ,
+
   description: "Official public grievance portal for the Government of India, powered by AI routing, GIS tracking, and automated workflows.",
   manifest: "/manifest.json",
   keywords: "grievance, civic, complaints, municipal, AI, government portal, jan setu, citizen services, india, govt, resolution",
